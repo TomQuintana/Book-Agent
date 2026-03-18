@@ -10,3 +10,14 @@ wheels/
 .venv
 .env
 
+# Database
+*.db
+*.db-wal
+*.db-shm
+
+# CLI history
+.asta_history
+
+# Guides
+MULTIAGENTE_GUIDE.md
+

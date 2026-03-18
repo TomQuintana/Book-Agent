@@ -7,7 +7,13 @@ from ..database.models import BookCreate, BookUpdate
 
 @tool
 def create_book(
-    title: str, author: str = None, status: str = None, description: str = None
+    title: str,
+    author: str = None,
+    status: str = None,
+    type: str = None,
+    description: str = None,
+    is_physically: bool = False,
+    finished: str = None,
 ) -> str:
     """Crea un nuevo libro en la base de datos.
 
@@ -15,25 +21,26 @@ def create_book(
         title: Título del libro (requerido)
         author: Autor del libro (opcional)
         status: Estado de lectura como 'reading', 'completed', 'pending' (opcional)
+        type: Tipo de libro como 'fiction', 'non-fiction', 'technical', 'emprendimiento' (opcional)
         description: Descripción del libro (opcional)
+        is_physically: Si el libro es físico (opcional, default False)
+        finished: Fecha de finalización en formato YYYY-MM-DD (opcional)
 
     Returns:
         Mensaje de confirmación con los detalles del libro creado
     """
     try:
-        print("Desde la tool de create")
         book_data = BookCreate(
             title=title,
             author=author,
             status=status,
-            type="test",
+            type=type,
             description=description,
-            is_physically=True,
-            finished=date.fromisoformat("2025-12-12"),
+            is_physically=is_physically,
+            finished=date.fromisoformat(finished) if finished else None,
         )
         book = book_service.create_book(book_data)
-        # return f"Libro '{title}' creado exitosamente con ID {book.id}"
-        return f"Libro '{title}' creado exitosamente "
+        return f"Libro '{book.title}' creado exitosamente con ID {book.id}"
     except Exception as e:
         return f"Error al crear el libro: {str(e)}"
 
@@ -54,15 +61,15 @@ def get_book(book_id: int) -> str:
             return f"No se encontró ningún libro con ID {book_id}"
 
         return f"""Libro encontrado:
-- ID: {book.id}
-- Título: {book.title}
-- Autor: {book.author or "No especificado"}
-- Estado: {book.status or "No especificado"}
-- Tipo: {book.type or "No especificado"}
-- Descripción: {book.description or "Sin descripción"}
-- Es físico: {"Sí" if book.is_physically else "No"}
-- Fecha de finalización: {book.finished or "No finalizado"}
-"""
+        - ID: {book.id}
+        - Título: {book.title}
+        - Autor: {book.author or "No especificado"}
+        - Estado: {book.status or "No especificado"}
+        - Tipo: {book.type or "No especificado"}
+        - Descripción: {book.description or "Sin descripción"}
+        - Es físico: {"Sí" if book.is_physically else "No"}
+        - Fecha de finalización: {book.finished or "No finalizado"}
+            """
     except Exception as e:
         return f"Error al obtener el libro: {str(e)}"
 
@@ -121,20 +128,42 @@ def delete_book(book_id: int) -> str:
 
 
 @tool
-def list_books(status: str = None, author: str = None) -> str:
-    """Lista todos los libros de la base de datos con filtros opcionales.
+def list_books(status: str = None, author: str = None, title: str = None) -> str:
+    """Lista y busca libros de la base de datos con filtros opcionales.
+
+    Usa esta herramienta para:
+    - Listar todos los libros (sin parámetros)
+    - Buscar por título específico (ej: "1984", "Cien años de soledad")
+    - Buscar por autor (ej: "García Márquez", "George Orwell")
+    - Filtrar por estado de lectura (ej: "completed", "reading", "pending")
+    - Combinar filtros (ej: autor + estado)
 
     Args:
-        status: Filtrar por estado de lectura (opcional)
-        author: Filtrar por autor (opcional)
+        title: Buscar por título del libro (búsqueda parcial, case-insensitive) (opcional)
+        author: Filtrar por autor (búsqueda parcial, case-insensitive) (opcional)
+        status: Filtrar por estado de lectura como 'reading', 'completed', 'pending' (opcional)
 
     Returns:
-        Lista formateada de libros encontrados
+        Lista formateada de libros encontrados con sus detalles
+
+    Ejemplos:
+        - list_books(title="1984") → Busca libros con "1984" en el título
+        - list_books(author="Orwell") → Busca libros de autores que contengan "Orwell"
+        - list_books(status="completed") → Lista libros completados
+        - list_books() → Lista todos los libros
     """
     try:
         books = book_service.list_books(status=status, author=author)
+
+        # Filtrar por título si se especifica
+        if title and books:
+            title_lower = title.lower()
+            books = [book for book in books if book.title and title_lower in book.title.lower()]
+
         if not books:
             filters = []
+            if title:
+                filters.append(f"title='{title}'")
             if status:
                 filters.append(f"status='{status}'")
             if author:
@@ -144,11 +173,12 @@ def list_books(status: str = None, author: str = None) -> str:
 
         result = f"Encontrados {len(books)} libro(s):\n\n"
         for book in books:
-            result += f"[{book.id}] {book.title}\n"
+            result += f"[ID: {book.id}] {book.title}\n"
             result += f"    Autor: {book.author or 'No especificado'}\n"
             result += f"    Estado: {book.status or 'No especificado'}\n"
             if book.description:
-                result += f"    Descripción: {book.description[:100]}...\n"
+                desc = book.description[:100] + "..." if len(book.description) > 100 else book.description
+                result += f"    Descripción: {desc}\n"
             result += "\n"
 
         return result

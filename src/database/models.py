@@ -1,52 +1,37 @@
 from datetime import datetime, date
 from typing import Optional
-from pydantic import BaseModel, Field
+from sqlmodel import SQLModel, Field
 
 
-class Book(BaseModel):
-    """Modelo de datos para un libro"""
-    id: Optional[int] = Field(None, description="ID único del libro (autogenerado)")
-    title: str = Field(..., description="Título del libro")
-    author: Optional[str] = Field(None, description="Autor del libro")
-    status: Optional[str] = Field(None, description="Estado de lectura (ej: 'reading', 'completed', 'pending')")
-    type: Optional[str] = Field(None, description="Tipo de libro (ej: 'fiction', 'non-fiction', 'technical')")
-    description: Optional[str] = Field(None, description="Descripción del libro")
-    created_at: Optional[datetime] = Field(None, description="Fecha de creación del registro")
-    is_physically: Optional[bool] = Field(False, description="Indica si el libro es físico o digital")
-    finished: Optional[date] = Field(None, description="Fecha en que se terminó de leer el libro")
+class Book(SQLModel, table=True):
+    __tablename__ = "books"
 
-    class Config:
-        from_attributes = True
-        json_schema_extra = {
-            "example": {
-                "title": "El Quijote",
-                "author": "Miguel de Cervantes",
-                "status": "completed",
-                "type": "fiction",
-                "description": "La historia de un hidalgo que pierde la razón",
-                "is_physically": True,
-                "finished": "2024-01-15"
-            }
-        }
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str = Field(..., min_length=1)
+    author: Optional[str] = None
+    status: Optional[str] = None
+    type: Optional[str] = None
+    description: Optional[str] = None
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
+    is_physically: Optional[bool] = Field(default=False)
+    finished: Optional[date] = None
 
 
-class BookCreate(BaseModel):
-    """Schema para crear un libro (sin ID)"""
-    title: str = Field(..., min_length=1, description="Título del libro")
-    author: Optional[str] = Field(None, description="Autor del libro")
-    status: Optional[str] = Field(None, description="Estado de lectura")
-    type: Optional[str] = Field(None, description="Tipo de libro")
-    description: Optional[str] = Field(None, description="Descripción del libro")
-    is_physically: Optional[bool] = Field(False, description="Si el libro es físico")
-    finished: Optional[date] = Field(None, description="Fecha de finalización")
+class BookCreate(SQLModel):
+    title: str = Field(..., min_length=1)
+    author: Optional[str] = None
+    status: Optional[str] = None
+    type: Optional[str] = None
+    description: Optional[str] = None
+    is_physically: Optional[bool] = Field(default=False)
+    finished: Optional[date] = None
 
 
-class BookUpdate(BaseModel):
-    """Schema para actualizar un libro (todos los campos opcionales)"""
-    title: Optional[str] = Field(None, min_length=1, description="Título del libro")
-    author: Optional[str] = Field(None, description="Autor del libro")
-    status: Optional[str] = Field(None, description="Estado de lectura")
-    type: Optional[str] = Field(None, description="Tipo de libro")
-    description: Optional[str] = Field(None, description="Descripción del libro")
-    is_physically: Optional[bool] = Field(None, description="Si el libro es físico")
-    finished: Optional[date] = Field(None, description="Fecha de finalización")
+class BookUpdate(SQLModel):
+    title: Optional[str] = Field(default=None, min_length=1)
+    author: Optional[str] = None
+    status: Optional[str] = None
+    type: Optional[str] = None
+    description: Optional[str] = None
+    is_physically: Optional[bool] = None
+    finished: Optional[date] = None
