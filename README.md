@@ -1,6 +1,6 @@
 # ASTA API
 
-Sistema multiagente de gestión de libros construido con LangGraph y FastAPI.
+Multi-agent book management system built with LangGraph and FastAPI.
 
 ```
   /\_/\
@@ -8,76 +8,76 @@ Sistema multiagente de gestión de libros construido con LangGraph y FastAPI.
   > ^ <
 ```
 
-## Descripción
+## Description
 
-ASTA es un sistema multiagente que permite gestionar una colección de libros a través de lenguaje natural. Usa LangGraph para orquestar agentes especializados que interpretan las consultas del usuario y ejecutan operaciones sobre una base de datos SQLite.
+ASTA is a multi-agent system that manages a book collection through natural language. It uses LangGraph to orchestrate specialized agents that interpret user queries and execute operations on a SQLite database.
 
-## Arquitectura
+## Architecture
 
-El sistema utiliza un grafo multiagente con el siguiente flujo:
+The system uses a multi-agent graph with the following flow:
 
-1. **Router Node** - Clasifica la intención del usuario (search, modify, recommend, conversation)
-2. **Agentes especializados** - Cada intención se enruta a un agente con tools específicas
-3. **Formatter Node** - Genera una respuesta final amigable
+1. **Router Node** - Classifies user intent (search, modify, recommend, conversation)
+2. **Specialized Agents** - Each intent is routed to an agent with specific tools
+3. **Formatter Node** - Generates a user-friendly final response
 
-### Agentes disponibles
+### Available Agents
 
-| Agente | Intención | Tools |
-|--------|-----------|-------|
-| Search Agent | Buscar y listar libros | `list_books`, `get_book` |
-| Modify Agent | Crear, actualizar, eliminar | `create_book`, `update_book`, `delete_book` |
+| Agent | Intent | Tools |
+|-------|--------|-------|
+| Search Agent | Search and list books | `list_books`, `get_book` |
+| Modify Agent | Create, update, delete | `create_book`, `update_book`, `delete_book` |
 
 ## Stack
 
-- **LangGraph** - Orquestación del grafo multiagente
-- **LangChain + OpenAI** - LLM para procesamiento de lenguaje natural
-- **FastAPI** - API REST
-- **SQLModel + SQLite** - Persistencia de datos
-- **Rich + Prompt Toolkit** - Interfaz CLI
+- **LangGraph** - Multi-agent graph orchestration
+- **LangChain + OpenAI** - LLM for natural language processing
+- **FastAPI** - REST API
+- **SQLModel + SQLite** - Data persistence
+- **Rich + Prompt Toolkit** - CLI interface
 
 ## Setup
 
 ```bash
-# Instalar dependencias
+# Install dependencies
 uv sync
 
-# Configurar variables de entorno
+# Configure environment variables
 cp .env.example .env
-# Editar .env con tus API keys
+# Edit .env with your API keys
 ```
 
-### Variables de entorno requeridas
+### Required environment variables
 
 ```
-OPENAI_API_KEY=tu-api-key
+OPENAI_API_KEY=your-api-key
 DATABASE_URL=sqlite:///src/data/books.db
 ```
 
-## Uso
+## Usage
 
-### CLI (interfaz de terminal)
+### CLI (terminal interface)
 
 ```bash
 make run-cli
 ```
 
-### API REST
+### REST API
 
 ```bash
 make run-api
 ```
 
-Endpoints disponibles:
+Available endpoints:
 
-- `POST /query` - Procesa una consulta via JSON `{"message": "..."}`
-- `GET /ask?question=...` - Procesa una consulta via query param
-- `GET /graph/visualize` - Visualización del grafo en formato Mermaid
+- `POST /query` - Process a query via JSON `{"message": "..."}`
+- `GET /ask?question=...` - Process a query via query param
+- `GET /graph/visualize` - Graph visualization in Mermaid format
 
-### Ejemplos de consultas
+### Query examples
 
 ```
-Crea un libro llamado 1984 de George Orwell, tipo fiction, estado pending
-Lista todos los libros
-Busca libros de García Márquez
-Elimina el libro con ID 3
+Create a book called 1984 by George Orwell, type fiction, status pending
+List all books
+Search books by García Márquez
+Delete book with ID 3
 ```
