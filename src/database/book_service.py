@@ -52,4 +52,3 @@ class BookService:
             return session.exec(query).all()
 
 
-book_service = BookService()

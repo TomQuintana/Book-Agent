@@ -1,8 +1,12 @@
 from datetime import date
+
 from langchain_core.tools import tool
 
-from ..database.book_service import book_service
+from ..database.book_service import BookService
+
 from ..database.models import BookCreate, BookUpdate
+
+book_service = BookService()
 
 
 @tool
@@ -158,7 +162,11 @@ def list_books(status: str = None, author: str = None, title: str = None) -> str
         # Filtrar por título si se especifica
         if title and books:
             title_lower = title.lower()
-            books = [book for book in books if book.title and title_lower in book.title.lower()]
+            books = [
+                book
+                for book in books
+                if book.title and title_lower in book.title.lower()
+            ]
 
         if not books:
             filters = []
@@ -177,7 +185,11 @@ def list_books(status: str = None, author: str = None, title: str = None) -> str
             result += f"    Autor: {book.author or 'No especificado'}\n"
             result += f"    Estado: {book.status or 'No especificado'}\n"
             if book.description:
-                desc = book.description[:100] + "..." if len(book.description) > 100 else book.description
+                desc = (
+                    book.description[:100] + "..."
+                    if len(book.description) > 100
+                    else book.description
+                )
                 result += f"    Descripción: {desc}\n"
             result += "\n"
 
@@ -186,5 +198,50 @@ def list_books(status: str = None, author: str = None, title: str = None) -> str
         return f"Error al listar libros: {str(e)}"
 
 
+@tool
+def get_read_books() -> str:
+    """Obtiene el historial de libros leídos o en progreso del usuario desde la base de datos.
+
+    Usa esta herramienta para conocer qué libros ha leído el usuario antes de hacer recomendaciones.
+    Retorna libros con estado 'completed' (terminados) y 'reading' (en progreso).
+
+    Returns:
+        Lista formateada de libros leídos con título, autor y tipo
+    """
+    try:
+        completed = book_service.list_books(status="completed")
+        reading = book_service.list_books(status="reading")
+        all_read = completed + reading
+
+        if not all_read:
+            return "El usuario no tiene libros registrados como leídos o en progreso en su biblioteca."
+
+        result = f"Historial de lectura del usuario ({len(all_read)} libro(s)):\n\n"
+
+        if completed:
+            result += "📚 Libros terminados:\n"
+            for book in completed:
+                result += f"  - {book.title}"
+                if book.author:
+                    result += f" (de {book.author})"
+                if book.type:
+                    result += f" [{book.type}]"
+                result += "\n"
+
+        if reading:
+            result += "\n📖 Libros en progreso:\n"
+            for book in reading:
+                result += f"  - {book.title}"
+                if book.author:
+                    result += f" (de {book.author})"
+                if book.type:
+                    result += f" [{book.type}]"
+                result += "\n"
+
+        return result
+    except Exception as e:
+        return f"Error al obtener el historial de lectura: {str(e)}"
+
+
 # Lista de todas las tools disponibles para exportar
-book_tools = [create_book, get_book, update_book, delete_book, list_books]
+book_tools = [create_book, get_book, update_book, delete_book, list_books, get_read_books]

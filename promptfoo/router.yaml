@@ -1,0 +1,148 @@
+description: "ASTA Router - Intent classification tests"
+
+providers:
+  - openai:gpt-4o-mini
+
+prompts:
+  - |
+    Eres un clasificador de intenciones para un sistema de gestión de libros.
+
+    Analiza el siguiente mensaje del usuario y clasifica su intención en UNA de estas categorías:
+
+    1. "search" - Si quiere buscar, listar, ver o consultar información de libros existentes
+       Ejemplos: "lista todos los libros", "busca libros de García Márquez", "dame info del libro 5"
+
+    2. "modify" - Si quiere crear, actualizar, editar o eliminar libros
+       Ejemplos: "crea un libro llamado 1984", "actualiza el estado del libro 3", "elimina el libro 2"
+
+    3. "recommend" - Si pide recomendaciones, sugerencias o consejos sobre qué leer
+       Ejemplos: "recomiéndame un libro", "qué debería leer ahora", "sugiéreme algo de ciencia ficción"
+
+    4. "conversation" - Si es una pregunta general, saludo o no está relacionado con operaciones de libros
+       Ejemplos: "hola", "cómo estás", "qué puedes hacer", "explícame qué es un libro"
+
+    Mensaje del usuario: "{{message}}"
+
+    Responde ÚNICAMENTE con una de estas palabras: search, modify, recommend, conversation
+    NO agregues explicaciones, solo la categoría.
+
+tests:
+  # --- SEARCH ---
+  - vars:
+      message: "Lista todos los libros"
+    assert:
+      - type: equals
+        value: "search"
+
+  - vars:
+      message: "Busca libros de García Márquez"
+    assert:
+      - type: equals
+        value: "search"
+
+  - vars:
+      message: "Dame info del libro 5"
+    assert:
+      - type: equals
+        value: "search"
+
+  - vars:
+      message: "Qué libros tengo?"
+    assert:
+      - type: equals
+        value: "search"
+
+  - vars:
+      message: "Muéstrame los libros que estoy leyendo"
+    assert:
+      - type: equals
+        value: "search"
+
+  # --- MODIFY ---
+  - vars:
+      message: "Crea un libro llamado 1984 de George Orwell"
+    assert:
+      - type: equals
+        value: "modify"
+
+  - vars:
+      message: "Elimina el libro con ID 3"
+    assert:
+      - type: equals
+        value: "modify"
+
+  - vars:
+      message: "Actualiza el estado del libro 2 a completado"
+    assert:
+      - type: equals
+        value: "modify"
+
+  - vars:
+      message: "Agrega el libro Pasa a la accion de autor desconocido"
+    assert:
+      - type: equals
+        value: "modify"
+
+  - vars:
+      message: "Borra todos los libros de ficción"
+    assert:
+      - type: equals
+        value: "modify"
+
+  # --- RECOMMEND ---
+  - vars:
+      message: "Recomiéndame un libro de ciencia ficción"
+    assert:
+      - type: equals
+        value: "recommend"
+
+  - vars:
+      message: "Qué debería leer ahora?"
+    assert:
+      - type: equals
+        value: "recommend"
+
+  - vars:
+      message: "Sugiéreme algo parecido a 1984"
+    assert:
+      - type: equals
+        value: "recommend"
+
+  # --- CONVERSATION ---
+  - vars:
+      message: "Hola"
+    assert:
+      - type: equals
+        value: "conversation"
+
+  - vars:
+      message: "Qué podés hacer?"
+    assert:
+      - type: equals
+        value: "conversation"
+
+  - vars:
+      message: "Gracias por la ayuda"
+    assert:
+      - type: equals
+        value: "conversation"
+
+  # --- EDGE CASES ---
+  - vars:
+      message: "Tengo el libro 1984 pero no sé qué leer después"
+    assert:
+      - type: equals
+        value: "recommend"
+
+  - vars:
+      message: "Quiero agregar un libro y que me recomiendes otro parecido"
+    assert:
+      - type: contains
+        value: "modify"
+
+  # --- FORCED FAIL (para probar que promptfoo detecta fallos) ---
+  - vars:
+      message: "Crea un libro llamado El Principito"
+    assert:
+      - type: equals
+        value: "search"

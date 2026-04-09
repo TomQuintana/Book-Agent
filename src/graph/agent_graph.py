@@ -2,6 +2,7 @@ from langgraph.graph import END, StateGraph
 
 from ..nodes.formatter_node import formatter_node
 from ..nodes.modify_node import modify_node
+from ..nodes.recommend_node import recommend_node
 from ..nodes.router_node import router_node
 from ..nodes.search_node import search_node
 from .state import AgentState
@@ -43,6 +44,7 @@ graph = StateGraph(AgentState)
 graph.add_node("router", router_node)
 graph.add_node("search_agent", search_node)
 graph.add_node("modify_agent", modify_node)
+graph.add_node("recommend_agent", recommend_node)
 graph.add_node("formatter", formatter_node)
 
 
@@ -68,17 +70,16 @@ graph.add_conditional_edges(
     "router",
     route_decision,
     {
-        "search": "search_agent",          # Intent "search" → nodo "search_agent"
+        "search": "search_agent",
         "modify": "modify_agent",
-        "recommend": "unknown",            # TODO: Cambiar a "recommend_agent" cuando se implemente
-        "conversation": "unknown",         # TODO: Cambiar a "conversation_agent" cuando se implemente
-        "unknown": "unknown",              # Intent desconocido → nodo "unknown"
+        "recommend": "recommend_agent",
     },
 )
 
 # 5. Todos los nodos van al formatter
 graph.add_edge("search_agent", "formatter")
 graph.add_edge("modify_agent", "formatter")
+graph.add_edge("recommend_agent", "formatter")
 graph.add_edge("unknown", "formatter")
 
 # 6. Formatter va al final
