@@ -2,6 +2,9 @@
 
 from ..graph.state import AgentState
 from ..llm.client import llm
+from ..config.logging_config import get_logger
+
+logger = get_logger("asta.router")
 
 
 def router_node(state: AgentState) -> AgentState:
@@ -61,10 +64,10 @@ NO agregues explicaciones, solo la categoría.
         state["intent"] = intent
         state["error"] = None
 
-        print(f"[ROUTER] Mensaje: '{user_message}' -> Intención: {intent}")
+        logger.debug(f"Mensaje: '{user_message}' -> Intención: {intent}")
 
     except Exception as e:
-        print(f"[ROUTER] Error al clasificar intención: {str(e)}")
+        logger.error(f"Error al clasificar intención: {str(e)}")
         state["intent"] = "conversation"
         state["error"] = f"Error en clasificación: {str(e)}"
 

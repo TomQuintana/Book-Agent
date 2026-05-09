@@ -1,7 +1,10 @@
 """Nodo Formatter - Formatea resultados de forma amigable para el usuario"""
 
-from ..llm.client import llm
+from ..config.logging_config import get_logger
 from ..graph.state import AgentState
+from ..llm.client import llm
+
+logger = get_logger("asta.formatter")
 
 
 def formatter_node(state: AgentState) -> AgentState:
@@ -27,12 +30,11 @@ def formatter_node(state: AgentState) -> AgentState:
     error = state.get("error")
 
     try:
-        print(f"\n[FORMATTER_NODE] 📝 Formateando respuesta final")
-        print(f"[FORMATTER_NODE] Intent: {intent}")
+        logger.debug(f"Formateando respuesta final — intent: {intent}")
 
         # Si hubo un error, generar respuesta de error amigable
         if error:
-            print(f"[FORMATTER_NODE] ⚠️  Detectado error: {error}")
+            logger.warning(f"Detectado error: {error}")
 
             error_prompt = f"""El usuario preguntó: "{user_message}"
 
@@ -43,13 +45,15 @@ Sé empático y profesional."""
 
             response = llm.invoke(error_prompt)
             state["final_response"] = response.content.strip()
-            print(f"[FORMATTER_NODE] ✅ Respuesta de error formateada")
+            logger.debug("Respuesta de error formateada")
             return state
 
         # Si no hay resultados intermedios, respuesta genérica
         if not intermediate_result:
-            state["final_response"] = "Lo siento, no pude procesar tu consulta correctamente."
-            print(f"[FORMATTER_NODE] ⚠️  No hay resultados intermedios")
+            state["final_response"] = (
+                "Lo siento, no pude procesar tu consulta correctamente."
+            )
+            logger.warning("No hay resultados intermedios")
             return state
 
         # Separar debug info del resultado si existe
@@ -97,15 +101,16 @@ IMPORTANTE: NO inventes información. Solo usa los datos proporcionados en los r
         state["metadata"]["formatted"] = True
         state["metadata"]["formatter_node"] = "executed"
 
-        print(f"[FORMATTER_NODE] ✅ Respuesta formateada exitosamente")
-        print(f"[FORMATTER_NODE] Respuesta: {final_text[:150]}...")
+        logger.debug(f"Respuesta formateada: {final_text[:150]}...")
 
     except Exception as e:
         error_msg = f"Error en nodo de formateo: {str(e)}"
-        print(f"[FORMATTER_NODE] ❌ {error_msg}")
+        logger.error(error_msg)
 
         # Fallback: retornar el resultado intermedio sin formatear
-        state["final_response"] = intermediate_result or "Ocurrió un error al formatear la respuesta."
+        state["final_response"] = (
+            intermediate_result or "Ocurrió un error al formatear la respuesta."
+        )
         state["error"] = error_msg
 
     return state

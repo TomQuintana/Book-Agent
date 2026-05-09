@@ -2,7 +2,9 @@ from fastapi import FastAPI
 from .routes import router
 from contextlib import asynccontextmanager
 from ..database.connection import init_db
+from ..config.logging_config import get_logger
 
+logger = get_logger("asta.api")
 app = FastAPI(title="ASTA API", version="0.1.0")
 
 
@@ -13,11 +15,11 @@ async def lifespan(app: FastAPI):
     Args:
         app (FastAPI): The FastAPI application instance.
     """
-    print('server is starting')
+    logger.info("Server is starting")
     await init_db()
-    print('server docc - http://localhost:3001/docs')
+    logger.info("Server docs — http://localhost:8000/docs")
     yield
-    print('server is shutting down')
+    logger.info("Server is shutting down")
 
 
 app.include_router(router)

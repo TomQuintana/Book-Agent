@@ -1,8 +1,17 @@
 """Servicio para ejecutar el grafo multiagente de LangGraph"""
 
 from typing import Optional
+
+from langfuse.langchain import CallbackHandler
+
+from ..config.logging_config import get_logger
+from ..config.settings import settings
 from .agent_graph import app as agent_graph
 from .state import AgentState
+
+logger = get_logger("asta.service")
+
+langfuse_handler = CallbackHandler()
 
 
 class GraphService:
@@ -58,46 +67,49 @@ class GraphService:
                 "intermediate_result": None,
                 "final_response": None,
                 "error": None,
-                "metadata": metadata or {}
+                "metadata": metadata or {},
             }
 
             # Ejecutar el grafo completo
-            print(f"\n[GRAPH_SERVICE] Procesando: '{user_message}'")
-            result = self.graph.invoke(initial_state)
-            print(result)
+            logger.info(f"Procesando: '{user_message}'")
+            result = self.graph.invoke(
+                initial_state, config={"callbacks": [langfuse_handler]}
+            )
+            logger.debug(f"Estado final: {result}")
 
             # Verificar si hubo errores durante la ejecución
             if result.get("error"):
-                print(f"[GRAPH_SERVICE] ⚠️  Error en ejecución: {result['error']}")
+                logger.warning(f"Error en ejecución: {result['error']}")
                 return {
                     "response": "Lo siento, hubo un error al procesar tu consulta.",
                     "intent": result.get("intent"),
                     "success": False,
                     "error": result["error"],
-                    "metadata": result.get("metadata", {})
+                    "metadata": result.get("metadata", {}),
                 }
 
             # Respuesta exitosa
-            print(f"[GRAPH_SERVICE] ✅ Completado - Intención: {result.get('intent')}")
+            logger.info(f"Completado — Intención: {result.get('intent')}")
+
             return {
                 "response": result.get("final_response") or "No se generó respuesta",
                 "intent": result.get("intent"),
                 "success": True,
                 "error": None,
-                "metadata": result.get("metadata", {})
+                "metadata": result.get("metadata", {}),
             }
 
         except Exception as e:
             # Capturar errores no manejados
             error_msg = f"Error inesperado en el grafo: {str(e)}"
-            print(f"[GRAPH_SERVICE] ❌ {error_msg}")
+            logger.error(error_msg)
 
             return {
                 "response": "Lo siento, ocurrió un error inesperado al procesar tu consulta.",
                 "intent": None,
                 "success": False,
                 "error": error_msg,
-                "metadata": metadata or {}
+                "metadata": metadata or {},
             }
 
     def get_graph_visualization(self) -> str:

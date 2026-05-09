@@ -6,6 +6,9 @@ from ..nodes.recommend_node import recommend_node
 from ..nodes.router_node import router_node
 from ..nodes.search_node import search_node
 from .state import AgentState
+from ..config.logging_config import get_logger
+
+logger = get_logger("asta.graph")
 
 
 def route_decision(state: AgentState) -> str:
@@ -21,11 +24,11 @@ def route_decision(state: AgentState) -> str:
     """
     intent = state.get("intent")
 
-    print(f"[ROUTE_DECISION] Intent detectado: {intent}")
+    logger.debug(f"Intent detectado: {intent}")
 
     # Validar que el intent existe
     if not intent:
-        print(f"[ROUTE_DECISION] ⚠️  Intent es None, usando 'unknown'")
+        logger.warning("Intent es None, usando 'unknown'")
         return "unknown"
 
     # Devolver el intent directamente (no el nombre del nodo)
@@ -86,14 +89,12 @@ graph.add_edge("unknown", "formatter")
 graph.add_edge("formatter", END)
 
 # 7. Compilar el grafo
-print("[AGENT_GRAPH] Compilando el grafo multiagente...")
+logger.debug("Compilando el grafo multiagente...")
 app = graph.compile()
 
 # Generar visualización del grafo
 try:
     app.get_graph().draw_mermaid_png(output_file_path="graph.png")
-    print("[AGENT_GRAPH] ✅ Grafo compilado y visualización generada (graph.png)")
+    logger.debug("Grafo compilado y visualización generada (graph.png)")
 except Exception as e:
-    print(
-        f"[AGENT_GRAPH] ⚠️  Grafo compilado pero no se pudo generar visualización: {e}"
-    )
+    logger.warning(f"Grafo compilado pero no se pudo generar visualización: {e}")

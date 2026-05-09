@@ -4,6 +4,9 @@ from langchain.agents import create_agent
 from ..llm.client import llm
 from ..graph.state import AgentState
 from ..tools.book_tools import create_book, update_book, delete_book
+from ..config.logging_config import get_logger
+
+logger = get_logger("asta.modify")
 
 
 modify_agent = create_agent(
@@ -42,8 +45,7 @@ def modify_node(state: AgentState) -> AgentState:
     user_message = state["user_message"]
 
     try:
-        print(f"\n[MODIFY_NODE] Procesando modificación")
-        print(f"[MODIFY_NODE] Mensaje: '{user_message}'")
+        logger.debug(f"Procesando modificación: '{user_message}'")
 
         result = modify_agent.invoke(
             {"messages": [{"role": "user", "content": user_message}]}
@@ -61,11 +63,11 @@ def modify_node(state: AgentState) -> AgentState:
         state["metadata"]["node_executed"] = "modify_node"
         state["metadata"]["agent_type"] = "modify_agent"
 
-        print(f"[MODIFY_NODE] Completado: {agent_response[:150]}...")
+        logger.debug(f"Completado: {agent_response[:150]}...")
 
     except Exception as e:
         error_msg = f"Error en nodo de modificación: {str(e)}"
-        print(f"[MODIFY_NODE] {error_msg}")
+        logger.error(error_msg)
         state["intermediate_result"] = "No se pudo completar la operación."
         state["error"] = error_msg
 

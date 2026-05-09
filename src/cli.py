@@ -11,6 +11,7 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.formatted_text import ANSI
 
+from src.config.logging_config import setup_logging
 from src.database.connection import init_db
 from src.graph.graph_service import GraphService
 
@@ -113,6 +114,7 @@ def get_prompt_text():
 
 def main():
     """Loop principal del CLI"""
+    setup_logging()
     init_db()
     graph_service = GraphService()
 

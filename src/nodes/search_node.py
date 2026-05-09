@@ -4,6 +4,9 @@ from langchain.agents import create_agent
 from ..llm.client import llm
 from ..graph.state import AgentState
 from ..tools.book_tools import list_books, get_book
+from ..config.logging_config import get_logger
+
+logger = get_logger("asta.search")
 
 
 # Crear agente interno especializado SOLO en búsqueda
@@ -76,8 +79,7 @@ def search_node(state: AgentState) -> AgentState:
     user_message = state["user_message"]
 
     try:
-        print(f"\n[SEARCH_NODE] 🔍 Procesando búsqueda")
-        print(f"[SEARCH_NODE] Mensaje: '{user_message}'")
+        logger.debug(f"Procesando búsqueda: '{user_message}'")
 
         # El agente interno decide automáticamente qué tool usar
         result = search_agent.invoke(
@@ -100,9 +102,7 @@ def search_node(state: AgentState) -> AgentState:
                         "args": tool_call.get("args", {}),
                     }
                     tools_used.append(tool_info)
-                    print(
-                        f"[SEARCH_NODE] 🔧 Tool llamada: {tool_info['name']}({tool_info['args']})"
-                    )
+                    logger.debug(f"Tool llamada: {tool_info['name']}({tool_info['args']})")
 
             # Detectar si es un resultado de tool
             if hasattr(msg, "type") and msg.type == "tool":
@@ -114,7 +114,7 @@ def search_node(state: AgentState) -> AgentState:
                         else "No content",
                     }
                 )
-                print(f"[SEARCH_NODE] 📊 Tool resultado: {msg.content[:100]}...")
+                logger.debug(f"Tool resultado: {msg.content[:100]}...")
 
         # Extraer la respuesta final del agente (último mensaje)
         agent_response = messages[-1].content
@@ -143,12 +143,12 @@ def search_node(state: AgentState) -> AgentState:
         state["metadata"]["tools_used"] = tools_used
         state["metadata"]["tools_count"] = len(tools_used)
 
-        print(f"[SEARCH_NODE] ✅ Búsqueda completada - Tools usadas: {len(tools_used)}")
-        print(f"[SEARCH_NODE] Resultado: {agent_response[:150]}...")
+        logger.debug(f"Búsqueda completada - Tools usadas: {len(tools_used)}")
+        logger.debug(f"Resultado: {agent_response[:150]}...")
 
     except Exception as e:
         error_msg = f"Error en nodo de búsqueda: {str(e)}"
-        print(f"[SEARCH_NODE] ❌ {error_msg}")
+        logger.error(error_msg)
 
         state["intermediate_result"] = (
             "No se pudieron obtener resultados de la búsqueda."

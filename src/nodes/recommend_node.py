@@ -4,6 +4,9 @@ from langchain.agents import create_agent
 from ..llm.client import llm
 from ..graph.state import AgentState
 from ..tools.book_tools import get_read_books
+from ..config.logging_config import get_logger
+
+logger = get_logger("asta.recommend")
 
 
 recommend_agent = create_agent(
@@ -52,8 +55,7 @@ def recommend_node(state: AgentState) -> AgentState:
     user_message = state["user_message"]
 
     try:
-        print(f"\n[RECOMMEND_NODE] Procesando recomendación")
-        print(f"[RECOMMEND_NODE] Mensaje: '{user_message}'")
+        logger.debug(f"Procesando recomendación: '{user_message}'")
 
         result = recommend_agent.invoke(
             {"messages": [{"role": "user", "content": user_message}]}
@@ -70,7 +72,7 @@ def recommend_node(state: AgentState) -> AgentState:
                         "args": tool_call.get("args", {}),
                     }
                     tools_used.append(tool_info)
-                    print(f"[RECOMMEND_NODE] Tool llamada: {tool_info['name']}()")
+                    logger.debug(f"Tool llamada: {tool_info['name']}()")
 
         agent_response = messages[-1].content
 
@@ -84,11 +86,11 @@ def recommend_node(state: AgentState) -> AgentState:
         state["metadata"]["agent_type"] = "recommend_agent"
         state["metadata"]["tools_used"] = tools_used
 
-        print(f"[RECOMMEND_NODE] Completado: {agent_response[:150]}...")
+        logger.debug(f"Completado: {agent_response[:150]}...")
 
     except Exception as e:
         error_msg = f"Error en nodo de recomendación: {str(e)}"
-        print(f"[RECOMMEND_NODE] {error_msg}")
+        logger.error(error_msg)
         state["intermediate_result"] = "No se pudieron generar recomendaciones."
         state["error"] = error_msg
 

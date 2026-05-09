@@ -1,7 +1,10 @@
+import os
+
+from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
-from dotenv import load_dotenv
-import os
+from src.config.logging_config import get_logger
+
 
 load_dotenv()
 
@@ -30,6 +33,8 @@ load_dotenv()
 # )
 
 llm = ChatOpenAI(model="gpt-4o", temperature=0, api_key=os.getenv("OPENAI_API_KEY"))
-print('desde el llm')
+
+_logger = get_logger("asta.llm")
+_logger.debug("LLM client initialized")
 # generate_chain = generation_prompt | llm
 # reflection_chain = reflection_prompt | llm
