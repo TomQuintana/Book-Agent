@@ -1,8 +1,9 @@
-"""Nodo Search - Agente especializado en búsqueda de libros"""
+"""Search Node — Specialized agent for book search queries."""
 
 from langchain.agents import create_agent
+from langgraph.checkpoint.memory import InMemorySaver
 from ..llm.client import llm
-from ..graph.state import AgentState
+from ..graph.state import AgentState, InternalAgentState
 from ..tools.book_tools import list_books, get_book
 from ..config.logging_config import get_logger
 
@@ -14,6 +15,8 @@ logger = get_logger("asta.search")
 search_agent = create_agent(
     model=llm,
     tools=[list_books, get_book],  # Solo tools de búsqueda/consulta
+    state_schema=InternalAgentState,
+    checkpointer=InMemorySaver(),
     system_prompt="""Eres un agente especializado en búsqueda y consulta de libros.
 
 Tu especialidad es BUSCAR información sobre libros, no modificarlos.
@@ -54,26 +57,26 @@ Sé conciso y útil en tus respuestas.""",
 
 def search_node(state: AgentState) -> AgentState:
     """
-    Nodo que procesa consultas de búsqueda usando un agente interno especializado.
+    Node that processes search queries using a specialized internal agent.
 
-    Flujo:
-    1. Recibe el mensaje del usuario desde el estado
-    2. El agente interno analiza la consulta
-    3. El agente decide qué tool usar (list_books o get_book)
-    4. Ejecuta la tool correspondiente
-    5. Guarda el resultado en intermediate_result
+    Flow:
+    1. Receives the user message from the state
+    2. The internal agent analyzes the query
+    3. The agent decides which tool to use (list_books or get_book)
+    4. Executes the corresponding tool
+    5. Saves the result in intermediate_result
 
     Args:
-        state: Estado actual del grafo con user_message
+        state: Current graph state containing user_message
 
     Returns:
-        Estado actualizado con intermediate_result
+        Updated state with intermediate_result
 
-    Ejemplos de consultas que maneja:
-        - "Lista todos los libros"
-        - "Busca libros de García Márquez"
-        - "Muéstrame libros completados"
-        - "Dame información del libro con ID 5"
+    Example queries handled:
+        - "List all books"
+        - "Find books by García Márquez"
+        - "Show completed books"
+        - "Get info for book with ID 5"
     """
 
     user_message = state["user_message"]
@@ -83,7 +86,8 @@ def search_node(state: AgentState) -> AgentState:
 
         # El agente interno decide automáticamente qué tool usar
         result = search_agent.invoke(
-            {"messages": [{"role": "user", "content": user_message}]}
+            {"messages": [{"role": "user", "content": user_message}]},
+            {"configurable": {"thread_id": "book_agent_session"}},
         )
 
         # Extraer todos los mensajes para debugging

@@ -1,8 +1,9 @@
-"""Nodo Modify - Agente especializado en crear, actualizar y eliminar libros"""
+"""Modify Node — Specialized agent for creating, updating and deleting books."""
 
 from langchain.agents import create_agent
+from langgraph.checkpoint.memory import InMemorySaver
 from ..llm.client import llm
-from ..graph.state import AgentState
+from ..graph.state import AgentState, InternalAgentState
 from ..tools.book_tools import create_book, update_book, delete_book
 from ..config.logging_config import get_logger
 
@@ -12,6 +13,8 @@ logger = get_logger("asta.modify")
 modify_agent = create_agent(
     model=llm,
     tools=[create_book, update_book, delete_book],
+    state_schema=InternalAgentState,
+    checkpointer=InMemorySaver(),
     system_prompt="""Eres un agente especializado en modificar la base de datos de libros.
 
 Tu especialidad es CREAR, ACTUALIZAR y ELIMINAR libros.
@@ -39,16 +42,15 @@ Sé conciso y confirma la operación realizada.""",
 
 
 def modify_node(state: AgentState) -> AgentState:
-    """
-    Nodo que procesa operaciones de modificación (crear, actualizar, eliminar).
-    """
+    """Node that processes modification operations (create, update, delete)."""
     user_message = state["user_message"]
 
     try:
         logger.debug(f"Procesando modificación: '{user_message}'")
 
         result = modify_agent.invoke(
-            {"messages": [{"role": "user", "content": user_message}]}
+            {"messages": [{"role": "user", "content": user_message}]},
+            {"configurable": {"thread_id": "book_agent_session"}},
         )
 
         messages = result["messages"]

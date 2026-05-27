@@ -1,8 +1,9 @@
-"""Nodo Recommend - Agente especializado en recomendar libros"""
+"""Recommend Node — Specialized agent for book recommendations."""
 
 from langchain.agents import create_agent
+from langgraph.checkpoint.memory import InMemorySaver
 from ..llm.client import llm
-from ..graph.state import AgentState
+from ..graph.state import AgentState, InternalAgentState
 from ..tools.book_tools import get_read_books
 from ..config.logging_config import get_logger
 
@@ -12,6 +13,8 @@ logger = get_logger("asta.recommend")
 recommend_agent = create_agent(
     model=llm,
     tools=[get_read_books],
+    state_schema=InternalAgentState,
+    checkpointer=InMemorySaver(),
     system_prompt="""Eres un agente experto en literatura y recomendaciones de libros.
 
 Tu única responsabilidad es RECOMENDAR libros que el usuario aún no ha leído.
@@ -39,18 +42,18 @@ Reglas:
 
 def recommend_node(state: AgentState) -> AgentState:
     """
-    Nodo que genera recomendaciones de libros personalizadas.
+    Node that generates personalized book recommendations.
 
-    Flujo:
-    1. Llama a get_read_books() para obtener el historial del usuario
-    2. Analiza el mensaje del usuario y el historial
-    3. Genera hasta 5 recomendaciones que no estén ya en la biblioteca
+    Flow:
+    1. Calls get_read_books() to retrieve the user's reading history
+    2. Analyzes the user message and the history
+    3. Generates up to 5 recommendations not already in the library
 
     Args:
-        state: Estado actual del grafo con user_message
+        state: Current graph state containing user_message
 
     Returns:
-        Estado actualizado con intermediate_result
+        Updated state with intermediate_result
     """
     user_message = state["user_message"]
 
@@ -58,7 +61,8 @@ def recommend_node(state: AgentState) -> AgentState:
         logger.debug(f"Procesando recomendación: '{user_message}'")
 
         result = recommend_agent.invoke(
-            {"messages": [{"role": "user", "content": user_message}]}
+            {"messages": [{"role": "user", "content": user_message}]},
+            {"configurable": {"thread_id": "book_agent_session"}},
         )
 
         messages = result["messages"]

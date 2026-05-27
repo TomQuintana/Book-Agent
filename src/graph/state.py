@@ -1,13 +1,23 @@
-"""Estado compartido del grafo multiagente"""
+"""Shared state for the multi-agent graph."""
 
-from typing import TypedDict, Optional, Literal
+from typing import TypedDict, Optional, Literal, Annotated
+from langchain.agents import AgentState as LangChainAgentState
+
+
+def keep_last_5_iterations(existing: list, new: list) -> list:
+    print('Messages:', (existing + new)[-10:])
+    return (existing + new)[-10:]
+
+
+class InternalAgentState(LangChainAgentState):
+    """Internal agent state with a sliding window of the last 5 conversation turns."""
+    messages: Annotated[list, keep_last_5_iterations]
 
 
 class AgentState(TypedDict):
-    """Estado que se comparte entre todos los nodos del grafo.
+    """State shared across all graph nodes.
 
-    Este estado se pasa de nodo en nodo, permitiendo que cada uno
-    lea información y agregue sus resultados.
+    Passed from node to node, allowing each one to read data and append its results.
     """
 
     # Entrada del usuario
