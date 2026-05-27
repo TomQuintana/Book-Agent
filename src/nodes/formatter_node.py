@@ -1,4 +1,4 @@
-"""Nodo Formatter - Formatea resultados de forma amigable para el usuario"""
+"""Formatter Node — Formats agent results into user-friendly responses."""
 
 from ..config.logging_config import get_logger
 from ..graph.state import AgentState
@@ -9,19 +9,19 @@ logger = get_logger("asta.formatter")
 
 def formatter_node(state: AgentState) -> AgentState:
     """
-    Nodo final que formatea la respuesta para el usuario de forma amigable.
+    Final node that formats the response for the user in a friendly way.
 
-    Este nodo:
-    1. Toma los resultados intermedios (de search_node, modify_node, etc.)
-    2. Considera el intent del usuario (search, modify, recommend, conversation)
-    3. Genera una respuesta final bien formateada y amigable
-    4. Maneja casos de error de forma clara
+    This node:
+    1. Takes intermediate results (from search_node, modify_node, etc.)
+    2. Considers the user's intent (search, modify, recommend, conversation)
+    3. Generates a well-structured and friendly final response
+    4. Handles error cases clearly
 
     Args:
-        state: Estado actual con intermediate_result e intent
+        state: Current state with intermediate_result and intent
 
     Returns:
-        Estado actualizado con final_response
+        Updated state with final_response
     """
 
     intermediate_result = state.get("intermediate_result")

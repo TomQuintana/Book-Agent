@@ -1,4 +1,4 @@
-"""Nodo Router - Clasifica la intención del usuario"""
+"""Router Node — Classifies user intent for graph routing."""
 
 from ..graph.state import AgentState
 from ..llm.client import llm
@@ -9,13 +9,13 @@ logger = get_logger("asta.router")
 
 def router_node(state: AgentState) -> AgentState:
     """
-    Clasifica la intención del usuario para enrutar al agente correcto.
+    Classifies the user's intent to route to the correct agent.
 
-    Intenciones posibles:
-    - search: Buscar, listar, obtener información de libros
-    - modify: Crear, actualizar o eliminar libros
-    - recommend: Pedir recomendaciones o sugerencias
-    - conversation: Preguntas generales sin operación específica
+    Possible intents:
+    - search: Search, list, or retrieve book information
+    - modify: Create, update, or delete books
+    - recommend: Request recommendations or suggestions
+    - conversation: General questions with no specific book operation
     """
 
     user_message = state["user_message"]

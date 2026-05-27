@@ -13,14 +13,14 @@ logger = get_logger("asta.graph")
 
 def route_decision(state: AgentState) -> str:
     """
-    Función de enrutamiento que decide a qué nodo ir según el intent.
+    Routing function that decides which node to go to based on the intent.
 
     Args:
-        state: Estado actual con el intent clasificado por el router
+        state: Current state with the intent classified by the router
 
     Returns:
-        El intent detectado (search, modify, recommend, conversation, unknown)
-        El conditional_edges mapeará este intent al nodo correspondiente
+        The detected intent (search, modify, recommend, conversation, unknown).
+        conditional_edges maps this intent to the corresponding node.
     """
     intent = state.get("intent")
 
@@ -53,7 +53,7 @@ graph.add_node("formatter", formatter_node)
 
 # Nodo temporal para intents no implementados
 def unknown_node(state: AgentState) -> AgentState:
-    """Nodo temporal para intents no implementados aún"""
+    """Temporary node for unimplemented intents."""
     intent = state.get("intent")
     state["intermediate_result"] = (
         f"El intent '{intent}' aún no está implementado. Solo 'search' está disponible por ahora."

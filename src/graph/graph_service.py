@@ -1,4 +1,4 @@
-"""Servicio para ejecutar el grafo multiagente de LangGraph"""
+"""Service for running the LangGraph multi-agent graph."""
 
 from typing import Optional
 
@@ -16,46 +16,46 @@ langfuse_handler = CallbackHandler()
 
 class GraphService:
     """
-    Servicio para procesar consultas de usuarios a través del grafo multiagente.
+    Service for processing user queries through the multi-agent graph.
 
-    Este servicio:
-    - Inicializa el estado del grafo con la consulta del usuario
-    - Ejecuta el grafo completo (router → agente específico → formatter)
-    - Retorna la respuesta final procesada
-    - Maneja errores de forma centralizada
+    This service:
+    - Initializes the graph state with the user query
+    - Runs the full graph (router → specialized agent → formatter)
+    - Returns the processed final response
+    - Handles errors centrally
     """
 
     def __init__(self):
-        """Inicializa el servicio con el grafo compilado"""
+        """Initializes the service with the compiled graph."""
         self.graph = agent_graph
 
     def process_query(self, user_message: str, metadata: Optional[dict] = None) -> dict:
         """
-        Procesa una consulta del usuario a través del grafo multiagente.
+        Processes a user query through the multi-agent graph.
 
-        El flujo es:
-        1. Router clasifica la intención (search/modify/recommend/conversation)
-        2. Se enruta al agente específico que procesa la consulta
-        3. Formatter genera una respuesta final amigable
+        Flow:
+        1. Router classifies the intent (search/modify/recommend/conversation)
+        2. Routes to the specialized agent that handles the query
+        3. Formatter generates a friendly final response
 
         Args:
-            user_message: Mensaje o consulta del usuario
-            metadata: Información adicional opcional (user_id, session_id, etc.)
+            user_message: User message or query
+            metadata: Optional additional data (user_id, session_id, etc.)
 
         Returns:
-            Dict con la siguiente estructura:
+            Dict with the following structure:
             {
-                "response": str,      # Respuesta final formateada
-                "intent": str,        # Intención detectada
-                "success": bool,      # Si se completó exitosamente
-                "error": str | None,  # Mensaje de error si falló
-                "metadata": dict      # Metadata adicional
+                "response": str,      # Final formatted response
+                "intent": str,        # Detected intent
+                "success": bool,      # Whether it completed successfully
+                "error": str | None,  # Error message if it failed
+                "metadata": dict      # Additional metadata
             }
 
         Example:
-            >>> result = graph_service.process_query("Lista todos los libros")
+            >>> result = graph_service.process_query("List all books")
             >>> print(result["response"])
-            "Aquí están todos los libros disponibles: ..."
+            "Here are all the available books: ..."
             >>> print(result["intent"])
             "search"
         """
@@ -114,12 +114,10 @@ class GraphService:
 
     def get_graph_visualization(self) -> str:
         """
-        Obtiene una representación visual del grafo en formato Mermaid.
-
-        Útil para debugging y documentación.
+        Returns a Mermaid diagram of the graph for debugging and documentation.
 
         Returns:
-            String con el diagrama Mermaid del grafo
+            String with the Mermaid diagram of the graph
         """
         try:
             return self.graph.get_graph().draw_mermaid()

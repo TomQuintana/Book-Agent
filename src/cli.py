@@ -46,7 +46,7 @@ COMMANDS = {
 
 
 def print_header():
-    """Muestra el header con el logo del gato"""
+    """Displays the header with the cat logo."""
     cat_text = Text(CAT_LOGO, style="cat")
     title = Text("ASTA CLI", style="title")
     subtitle = Text("v0.1.0 · Book Management Agent", style="dim")
@@ -68,7 +68,7 @@ def print_header():
 
 
 def print_help():
-    """Muestra los comandos disponibles"""
+    """Displays the available commands."""
     lines = Text()
     for cmd, desc in COMMANDS.items():
         lines.append(f"  {cmd:<12}", style="bold white")
@@ -80,7 +80,7 @@ def print_help():
 
 
 def print_response(result: dict):
-    """Muestra la respuesta del agente"""
+    """Displays the agent response."""
     if result["success"]:
         intent_label = result.get("intent") or "unknown"
         response_text = result.get("response", "Sin respuesta")
@@ -108,12 +108,12 @@ def print_response(result: dict):
 
 
 def get_prompt_text():
-    """Retorna el prompt estilizado con ANSI codes"""
+    """Returns the styled prompt with ANSI codes."""
     return ANSI("\033[1;37m🐱 asta\033[0m \033[2;37m>\033[0m ")
 
 
 def main():
-    """Loop principal del CLI"""
+    """Main CLI loop."""
     setup_logging()
     init_db()
     graph_service = GraphService()

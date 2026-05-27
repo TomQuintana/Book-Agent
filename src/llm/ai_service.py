@@ -13,27 +13,27 @@ agent = create_agent(
     Si necesitas información adicional para completar una tarea, pregunta al usuario."""
 )
 
-class IAService:
-    """Servicio de IA para procesar consultas relacionadas con libros"""
-    
+class AIService:
+    """AI service for processing book-related queries"""
+
     def __init__(self):
         self.agent = agent
-    
+
     def process_query(self, query: str) -> str:
-        """Procesa una consulta del usuario usando el agente con tools
-        
+        """Processes a user query using the agent with tools
+
         Args:
-            query: Consulta o pregunta del usuario
-            
+            query: User query or question
+
         Returns:
-            Respuesta del agente después de ejecutar las tools necesarias
+            Agent response after executing the necessary tools
         """
         result = self.agent.invoke({
             "messages": [{"role": "user", "content": query}]
         })
-        
-        # Extraer la última respuesta del agente
+
+        # Extract the last agent response
         return result["messages"][-1].content
 
-# Instancia global del servicio
-ia_service = IAService()
+# Global service instance
+ai_service = AIService()

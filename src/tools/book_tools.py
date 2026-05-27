@@ -19,19 +19,19 @@ def create_book(
     is_physically: bool = False,
     finished: str = None,
 ) -> str:
-    """Crea un nuevo libro en la base de datos.
+    """Creates a new book in the database.
 
     Args:
-        title: Título del libro (requerido)
-        author: Autor del libro (opcional)
-        status: Estado de lectura como 'reading', 'completed', 'pending' (opcional)
-        type: Tipo de libro como 'fiction', 'non-fiction', 'technical', 'emprendimiento' (opcional)
-        description: Descripción del libro (opcional)
-        is_physically: Si el libro es físico (opcional, default False)
-        finished: Fecha de finalización en formato YYYY-MM-DD (opcional)
+        title: Book title (required)
+        author: Book author (optional)
+        status: Reading status — 'reading', 'completed', 'pending' (optional)
+        type: Book type — 'fiction', 'non-fiction', 'technical', 'emprendimiento' (optional)
+        description: Book description (optional)
+        is_physically: Whether the book is a physical copy (optional, default False)
+        finished: Completion date in YYYY-MM-DD format (optional)
 
     Returns:
-        Mensaje de confirmación con los detalles del libro creado
+        Confirmation message with the created book details
     """
     try:
         book_data = BookCreate(
@@ -51,13 +51,13 @@ def create_book(
 
 @tool
 def get_book(book_id: int) -> str:
-    """Obtiene información detallada de un libro por su ID.
+    """Retrieves detailed information about a book by its ID.
 
     Args:
-        book_id: ID único del libro
+        book_id: Unique book ID
 
     Returns:
-        Información completa del libro o mensaje de error si no existe
+        Full book details or an error message if not found
     """
     try:
         book = book_service.get_book(book_id)
@@ -86,17 +86,17 @@ def update_book(
     status: str = None,
     description: str = None,
 ) -> str:
-    """Actualiza la información de un libro existente.
+    """Updates the information of an existing book.
 
     Args:
-        book_id: ID del libro a actualizar (requerido)
-        title: Nuevo título del libro (opcional)
-        author: Nuevo autor del libro (opcional)
-        status: Nuevo estado de lectura (opcional)
-        description: Nueva descripción (opcional)
+        book_id: ID of the book to update (required)
+        title: New book title (optional)
+        author: New book author (optional)
+        status: New reading status (optional)
+        description: New description (optional)
 
     Returns:
-        Mensaje de confirmación con los datos actualizados
+        Confirmation message with the updated data
     """
     try:
         book_data = BookUpdate(
@@ -113,13 +113,13 @@ def update_book(
 
 @tool
 def delete_book(book_id: int) -> str:
-    """Elimina un libro de la base de datos.
+    """Deletes a book from the database.
 
     Args:
-        book_id: ID del libro a eliminar
+        book_id: ID of the book to delete
 
     Returns:
-        Mensaje de confirmación o error
+        Confirmation message or error
     """
     try:
         deleted = book_service.delete_book(book_id)
@@ -133,28 +133,28 @@ def delete_book(book_id: int) -> str:
 
 @tool
 def list_books(status: str = None, author: str = None, title: str = None) -> str:
-    """Lista y busca libros de la base de datos con filtros opcionales.
+    """Lists and searches books in the database with optional filters.
 
-    Usa esta herramienta para:
-    - Listar todos los libros (sin parámetros)
-    - Buscar por título específico (ej: "1984", "Cien años de soledad")
-    - Buscar por autor (ej: "García Márquez", "George Orwell")
-    - Filtrar por estado de lectura (ej: "completed", "reading", "pending")
-    - Combinar filtros (ej: autor + estado)
+    Use this tool to:
+    - List all books (no parameters)
+    - Search by specific title (e.g. "1984", "One Hundred Years of Solitude")
+    - Search by author (e.g. "García Márquez", "George Orwell")
+    - Filter by reading status (e.g. "completed", "reading", "pending")
+    - Combine filters (e.g. author + status)
 
     Args:
-        title: Buscar por título del libro (búsqueda parcial, case-insensitive) (opcional)
-        author: Filtrar por autor (búsqueda parcial, case-insensitive) (opcional)
-        status: Filtrar por estado de lectura como 'reading', 'completed', 'pending' (opcional)
+        title: Search by book title (partial, case-insensitive) (optional)
+        author: Filter by author (partial, case-insensitive) (optional)
+        status: Filter by reading status — 'reading', 'completed', 'pending' (optional)
 
     Returns:
-        Lista formateada de libros encontrados con sus detalles
+        Formatted list of matching books with their details
 
-    Ejemplos:
-        - list_books(title="1984") → Busca libros con "1984" en el título
-        - list_books(author="Orwell") → Busca libros de autores que contengan "Orwell"
-        - list_books(status="completed") → Lista libros completados
-        - list_books() → Lista todos los libros
+    Examples:
+        - list_books(title="1984") → Finds books with "1984" in the title
+        - list_books(author="Orwell") → Finds books by authors containing "Orwell"
+        - list_books(status="completed") → Lists completed books
+        - list_books() → Lists all books
     """
     try:
         books = book_service.list_books(status=status, author=author)
@@ -200,13 +200,13 @@ def list_books(status: str = None, author: str = None, title: str = None) -> str
 
 @tool
 def get_read_books() -> str:
-    """Obtiene el historial de libros leídos o en progreso del usuario desde la base de datos.
+    """Retrieves the user's reading history (completed and in-progress books) from the database.
 
-    Usa esta herramienta para conocer qué libros ha leído el usuario antes de hacer recomendaciones.
-    Retorna libros con estado 'completed' (terminados) y 'reading' (en progreso).
+    Use this tool before making recommendations to understand what the user has already read.
+    Returns books with status 'completed' and 'reading'.
 
     Returns:
-        Lista formateada de libros leídos con título, autor y tipo
+        Formatted list of read books with title, author and type
     """
     try:
         completed = book_service.list_books(status="completed")

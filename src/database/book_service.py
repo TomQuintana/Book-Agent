@@ -5,7 +5,7 @@ from .connection import get_session
 
 
 class BookService:
-    """Servicio para operaciones CRUD de libros"""
+    """Service for book CRUD operations."""
 
     def create_book(self, book_data: BookCreate) -> Book:
         with get_session() as session:

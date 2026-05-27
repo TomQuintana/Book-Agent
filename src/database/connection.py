@@ -5,10 +5,10 @@ engine = create_engine(settings.DATABASE_URL, echo=False)
 
 
 async def init_db():
-    """Crea las tablas si no existen"""
+    """Creates database tables if they do not exist."""
     SQLModel.metadata.create_all(engine)
 
 
 def get_session() -> Session:
-    """Retorna una nueva sesión de base de datos"""
+    """Returns a new database session."""
     return Session(engine)
