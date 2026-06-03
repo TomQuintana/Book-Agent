@@ -56,7 +56,7 @@ def unknown_node(state: AgentState) -> AgentState:
     """Temporary node for unimplemented intents."""
     intent = state.get("intent")
     state["intermediate_result"] = (
-        f"El intent '{intent}' aún no está implementado. Solo 'search' está disponible por ahora."
+        f"El intent '{intent}' aún no está implementado"
     )
     state["error"] = None
     return state
@@ -64,11 +64,8 @@ def unknown_node(state: AgentState) -> AgentState:
 
 graph.add_node("unknown", unknown_node)
 
-# 3. Definir punto de entrada
 graph.set_entry_point("router")
 
-# 4. Agregar edge condicional desde router
-# Este diccionario mapea: intent (devuelto por route_decision) → nombre del nodo
 graph.add_conditional_edges(
     "router",
     route_decision,
@@ -79,22 +76,20 @@ graph.add_conditional_edges(
     },
 )
 
-# 5. Todos los nodos van al formatter
 graph.add_edge("search_agent", "formatter")
 graph.add_edge("modify_agent", "formatter")
 graph.add_edge("recommend_agent", "formatter")
 graph.add_edge("unknown", "formatter")
 
-# 6. Formatter va al final
 graph.add_edge("formatter", END)
 
-# 7. Compilar el grafo
 logger.debug("Compilando el grafo multiagente...")
 app = graph.compile()
 
-# Generar visualización del grafo
 try:
-    app.get_graph().draw_mermaid_png(output_file_path="graph.png")
-    logger.debug("Grafo compilado y visualización generada (graph.png)")
+    if not "graph.png":
+        app.get_graph().draw_mermaid_png(output_file_path="graph.png")
+        logger.debug("Grafo compilado y visualización generada (graph.png)")
+
 except Exception as e:
     logger.warning(f"Grafo compilado pero no se pudo generar visualización: {e}")
