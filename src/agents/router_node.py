@@ -7,7 +7,7 @@ from ..config.logging_config import get_logger
 logger = get_logger("asta.router")
 
 
-def router_node(state: AgentState) -> AgentState:
+def agent_router(state: AgentState) -> AgentState:
     """
     Classifies the user's intent to route to the correct agent.
 

@@ -41,7 +41,7 @@ Sé conciso y confirma la operación realizada.""",
 )
 
 
-def modify_node(state: AgentState) -> AgentState:
+def agent_modify(state: AgentState) -> AgentState:
     """Node that processes modification operations (create, update, delete)."""
     user_message = state["user_message"]
 
@@ -62,7 +62,7 @@ def modify_node(state: AgentState) -> AgentState:
         if "metadata" not in state or state["metadata"] is None:
             state["metadata"] = {}
 
-        state["metadata"]["node_executed"] = "modify_node"
+        state["metadata"]["node_executed"] = "agent_modify"
         state["metadata"]["agent_type"] = "modify_agent"
 
         logger.debug(f"Completado: {agent_response[:150]}...")

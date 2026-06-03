@@ -40,7 +40,7 @@ Reglas:
 )
 
 
-def recommend_node(state: AgentState) -> AgentState:
+def agent_recommend(state: AgentState) -> AgentState:
     """
     Node that generates personalized book recommendations.
 
@@ -86,7 +86,7 @@ def recommend_node(state: AgentState) -> AgentState:
         if "metadata" not in state or state["metadata"] is None:
             state["metadata"] = {}
 
-        state["metadata"]["node_executed"] = "recommend_node"
+        state["metadata"]["node_executed"] = "agent_recommend"
         state["metadata"]["agent_type"] = "recommend_agent"
         state["metadata"]["tools_used"] = tools_used
 

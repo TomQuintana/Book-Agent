@@ -7,7 +7,7 @@ from ..llm.client import llm
 logger = get_logger("asta.formatter")
 
 
-def formatter_node(state: AgentState) -> AgentState:
+def agent_formatter(state: AgentState) -> AgentState:
     """
     Final node that formats the response for the user in a friendly way.
 

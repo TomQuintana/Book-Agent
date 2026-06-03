@@ -55,7 +55,7 @@ Sé conciso y útil en tus respuestas.""",
 )
 
 
-def search_node(state: AgentState) -> AgentState:
+def agent_search(state: AgentState) -> AgentState:
     """
     Node that processes search queries using a specialized internal agent.
 
@@ -141,7 +141,7 @@ def search_node(state: AgentState) -> AgentState:
         if "metadata" not in state or state["metadata"] is None:
             state["metadata"] = {}
 
-        state["metadata"]["node_executed"] = "search_node"
+        state["metadata"]["node_executed"] = "agent_search"
         state["metadata"]["agent_type"] = "search_agent"
         state["metadata"]["tools_available"] = ["list_books", "get_book"]
         state["metadata"]["tools_used"] = tools_used

@@ -1,12 +1,12 @@
 from langgraph.graph import END, StateGraph
 
-from ..nodes.formatter_node import formatter_node
-from ..nodes.modify_node import modify_node
-from ..nodes.recommend_node import recommend_node
-from ..nodes.router_node import router_node
-from ..nodes.search_node import search_node
-from .state import AgentState
 from ..config.logging_config import get_logger
+from ..agents.formatter_node import agent_formatter
+from ..agents.modify_node import agent_modify
+from ..agents.recommend_node import agent_recommend
+from ..agents.router_node import agent_router
+from ..agents.search_node import agent_search
+from .state import AgentState
 
 logger = get_logger("asta.graph")
 
@@ -44,11 +44,11 @@ def route_decision(state: AgentState) -> str:
 graph = StateGraph(AgentState)
 
 # 2. Agregar nodos implementados
-graph.add_node("router", router_node)
-graph.add_node("search_agent", search_node)
-graph.add_node("modify_agent", modify_node)
-graph.add_node("recommend_agent", recommend_node)
-graph.add_node("formatter", formatter_node)
+graph.add_node("router", agent_router)
+graph.add_node("search_agent", agent_search)
+graph.add_node("modify_agent", agent_modify)
+graph.add_node("recommend_agent", agent_recommend)
+graph.add_node("formatter", agent_formatter)
 
 
 # Nodo temporal para intents no implementados
