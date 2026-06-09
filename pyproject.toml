@@ -1,3 +1,8 @@
+[tool.pyright]
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+reportUnusedCallResult = false
+
 [project]
 name = "asta-api"
 version = "0.1.0"
