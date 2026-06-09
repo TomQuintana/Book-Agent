@@ -54,14 +54,6 @@ Sé empático y profesional."""
             logger.warning("No hay resultados intermedios")
             return state
 
-        debug_info = ""
-        clean_result = intermediate_result
-
-        if "[DEBUG INFO]" in intermediate_result:
-            parts = intermediate_result.split("[DEBUG INFO]")
-            clean_result = parts[0].strip()
-            debug_info = "[DEBUG INFO]" + parts[1] if len(parts) > 1 else ""
-
         format_prompt = f"""Eres un asistente de gestión de libros amigable y profesional.
 
 El usuario hizo esta consulta: "{user_message}"
@@ -69,7 +61,7 @@ El usuario hizo esta consulta: "{user_message}"
 El sistema detectó que su intención es: {intent}
 
 Los resultados obtenidos son:
-{clean_result}
+{intermediate_result}
 
 Tu trabajo es tomar estos resultados y generar una respuesta final:
 - Clara y bien estructurada
@@ -80,12 +72,7 @@ Tu trabajo es tomar estos resultados y generar una respuesta final:
 IMPORTANTE: NO inventes información. Solo usa los datos proporcionados en los resultados."""
 
         response = llm.invoke(format_prompt)
-        final_text = response.content.strip()
-
-        if debug_info:
-            final_text += "\n\n" + debug_info
-
-        state["final_response"] = final_text
+        state["final_response"] = response.content.strip()
 
         if "metadata" not in state or state["metadata"] is None:
             state["metadata"] = {}

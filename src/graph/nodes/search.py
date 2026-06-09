@@ -61,16 +61,7 @@ def agent_search(state: AgentState) -> AgentState:
 
         agent_response = messages[-1].content
 
-        debug_info = ""
-        if tools_used:
-            debug_info = "\n\n[DEBUG INFO]\n"
-            debug_info += f"Tools ejecutadas: {len(tools_used)}\n"
-            for i, tool in enumerate(tools_used, 1):
-                debug_info += f"{i}. {tool['name']}({tool['args']})\n"
-        else:
-            debug_info = "\n\n[DEBUG INFO]\n⚠️  No se ejecutó ninguna tool\n"
-
-        state["intermediate_result"] = agent_response + debug_info
+        state["intermediate_result"] = agent_response
         state["error"] = None
 
         if "metadata" not in state or state["metadata"] is None:
