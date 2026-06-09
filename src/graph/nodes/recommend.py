@@ -1,43 +1,10 @@
-"""Recommend Node — Specialized agent for book recommendations."""
+"""Recommend node — wraps the recommend subagent for the graph."""
 
-from langchain.agents import create_agent
-from langgraph.checkpoint.memory import InMemorySaver
-from ..llm.client import llm
-from ..graph.state import AgentState, InternalAgentState
-from ..tools.book_tools import get_read_books
-from ..config.logging_config import get_logger
+from ..state import AgentState
+from ...agents.recommend_agent import recommend_agent
+from ...config.logging_config import get_logger
 
 logger = get_logger("asta.recommend")
-
-
-recommend_agent = create_agent(
-    model=llm,
-    tools=[get_read_books],
-    state_schema=InternalAgentState,
-    checkpointer=InMemorySaver(),
-    system_prompt="""Eres un agente experto en literatura y recomendaciones de libros.
-
-Tu única responsabilidad es RECOMENDAR libros que el usuario aún no ha leído.
-
-Proceso que debes seguir:
-1. Llama a get_read_books() para ver el historial de lectura del usuario en su biblioteca.
-2. Analiza el mensaje del usuario: puede mencionar libros específicos que leyó, géneros que le gustan, o pedir recomendaciones abiertas.
-3. Combina ambas fuentes (historial en DB + lo que dice el usuario) para entender sus gustos.
-4. Genera hasta 5 recomendaciones de libros que NO estén ya en su historial.
-
-Formato de respuesta obligatorio para cada recomendación:
-- **Título** — Autor
-  Género: [género]
-  Por qué te lo recomiendo: [1-2 oraciones explicando por qué encaja con sus gustos]
-
-Reglas:
-- Máximo 5 recomendaciones.
-- No recomiendes libros que ya aparecen en el historial del usuario.
-- Si el usuario menciona libros en su mensaje, tenlos en cuenta aunque no estén en la DB.
-- Prioriza libros reconocidos y de calidad dentro del género o estilo preferido.
-- Si el usuario no da contexto suficiente, usa el historial de la DB para inferir gustos.
-- Si no hay historial y el usuario no da pistas, pide más contexto antes de recomendar.""",
-)
 
 
 def agent_recommend(state: AgentState) -> AgentState:
@@ -45,7 +12,7 @@ def agent_recommend(state: AgentState) -> AgentState:
     Node that generates personalized book recommendations.
 
     Flow:
-    1. Calls get_read_books() to retrieve the user's reading history
+    1. Calls get_read_books() via the subagent to retrieve the user's reading history
     2. Analyzes the user message and the history
     3. Generates up to 5 recommendations not already in the library
 

@@ -60,7 +60,6 @@ class GraphService:
             "search"
         """
         try:
-            # Construir estado inicial
             initial_state: AgentState = {
                 "user_message": user_message,
                 "intent": None,
@@ -70,7 +69,6 @@ class GraphService:
                 "metadata": metadata or {},
             }
 
-            # Ejecutar el grafo completo
             logger.info(f"Procesando: '{user_message}'")
             result = self.graph.invoke(
                 initial_state, config={"callbacks": [langfuse_handler]}

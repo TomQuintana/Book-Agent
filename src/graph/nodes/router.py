@@ -1,8 +1,8 @@
-"""Router Node — Classifies user intent for graph routing."""
+"""Router node — classifies user intent for graph routing."""
 
-from ..graph.state import AgentState
-from ..llm.client import llm
-from ..config.logging_config import get_logger
+from ..state import AgentState
+from ...llm.client import llm
+from ...config.logging_config import get_logger
 
 logger = get_logger("asta.router")
 
@@ -20,7 +20,6 @@ def agent_router(state: AgentState) -> AgentState:
 
     user_message = state["user_message"]
 
-    # Prompt para clasificar la intención
     classification_prompt = f"""Eres un clasificador de intenciones para un sistema de gestión de libros.
 
 Analiza el siguiente mensaje del usuario y clasifica su intención en UNA de estas categorías:
@@ -44,23 +43,18 @@ NO agregues explicaciones, solo la categoría.
 """
 
     try:
-        # Invocar el LLM para clasificar
         response = llm.invoke(classification_prompt)
         intent = response.content.strip().lower()
 
-        # Validar que la respuesta sea una de las intenciones válidas
         valid_intents = ["search", "modify", "recommend", "conversation"]
         if intent not in valid_intents:
-            # Si el LLM responde algo inválido, intentamos parsear
             for valid_intent in valid_intents:
                 if valid_intent in intent:
                     intent = valid_intent
                     break
             else:
-                # Por defecto, lo consideramos conversación
                 intent = "conversation"
 
-        # Actualizar el estado con la intención detectada
         state["intent"] = intent
         state["error"] = None
 

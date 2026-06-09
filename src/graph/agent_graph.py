@@ -1,11 +1,11 @@
 from langgraph.graph import END, StateGraph
 
 from ..config.logging_config import get_logger
-from ..agents.formatter_node import agent_formatter
-from ..agents.modify_node import agent_modify
-from ..agents.recommend_node import agent_recommend
-from ..agents.router_node import agent_router
-from ..agents.search_node import agent_search
+from .nodes.formatter import agent_formatter
+from .nodes.modify import agent_modify
+from .nodes.recommend import agent_recommend
+from .nodes.router import agent_router
+from .nodes.search import agent_search
 from .state import AgentState
 
 logger = get_logger("asta.graph")
