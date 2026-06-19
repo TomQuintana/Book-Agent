@@ -14,3 +14,5 @@ recommend_agent = create_agent(
     checkpointer=InMemorySaver(),
     system_prompt=SYSTEM_PROMPT,
 )
+
+print("test")
