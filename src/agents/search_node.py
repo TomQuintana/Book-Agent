@@ -3,6 +3,7 @@
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from ..llm.client import llm
+from ..llm.langfuse_client import langfuse
 from ..graph.state import AgentState, InternalAgentState
 from ..tools.book_tools import list_books, get_book
 from ..config.logging_config import get_logger
@@ -10,14 +11,8 @@ from ..config.logging_config import get_logger
 logger = get_logger("asta.search")
 
 
-# Crear agente interno especializado SOLO en búsqueda
-# Este agente solo tiene acceso a tools de lectura (NO puede modificar datos)
-search_agent = create_agent(
-    model=llm,
-    tools=[list_books, get_book],  # Solo tools de búsqueda/consulta
-    state_schema=InternalAgentState,
-    checkpointer=InMemorySaver(),
-    system_prompt="""Eres un agente especializado en búsqueda y consulta de libros.
+# Prompt canónico: fallback si Langfuse no responde y fuente para el seed (scripts/seed_prompts.py)
+SEARCH_SYSTEM_PROMPT = """Eres un agente especializado en búsqueda y consulta de libros.
 
 Tu especialidad es BUSCAR información sobre libros, no modificarlos.
 
@@ -51,7 +46,19 @@ Ejemplos:
 - "Libro con ID 5" → get_book(5)
 - "Lista todos los libros" → list_books()
 
-Sé conciso y útil en tus respuestas.""",
+Sé conciso y útil en tus respuestas."""
+
+
+# Crear agente interno especializado SOLO en búsqueda
+# Este agente solo tiene acceso a tools de lectura (NO puede modificar datos)
+search_agent = create_agent(
+    model=llm,
+    tools=[list_books, get_book],  # Solo tools de búsqueda/consulta
+    state_schema=InternalAgentState,
+    checkpointer=InMemorySaver(),
+    system_prompt=langfuse.get_prompt(
+        "search-agent", fallback=SEARCH_SYSTEM_PROMPT
+    ).prompt,
 )
 
 

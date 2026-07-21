@@ -1,27 +1,16 @@
 """Router Node — Classifies user intent for graph routing."""
 
+from ..config.logging_config import get_logger
 from ..graph.state import AgentState
 from ..llm.client import llm
-from ..config.logging_config import get_logger
+from ..llm.langfuse_client import langfuse
 
 logger = get_logger("asta.router")
 
 
-def agent_router(state: AgentState) -> AgentState:
-    """
-    Classifies the user's intent to route to the correct agent.
-
-    Possible intents:
-    - search: Search, list, or retrieve book information
-    - modify: Create, update, or delete books
-    - recommend: Request recommendations or suggestions
-    - conversation: General questions with no specific book operation
-    """
-
-    user_message = state["user_message"]
-
-    # Prompt para clasificar la intención
-    classification_prompt = f"""Eres un clasificador de intenciones para un sistema de gestión de libros.
+# Prompt canónico: fallback si Langfuse no responde y fuente para el seed (scripts/seed_prompts.py)
+# Variable en sintaxis mustache de Langfuse: {{user_message}}
+ROUTER_PROMPT = """Eres un clasificador de intenciones para un sistema de gestión de libros.
 
 Analiza el siguiente mensaje del usuario y clasifica su intención en UNA de estas categorías:
 
@@ -37,30 +26,42 @@ Analiza el siguiente mensaje del usuario y clasifica su intención en UNA de est
 4. "conversation" - Si es una pregunta general, saludo o no está relacionado con operaciones de libros
    Ejemplos: "hola", "cómo estás", "qué puedes hacer", "explícame qué es un libro"
 
-Mensaje del usuario: "{user_message}"
+Mensaje del usuario: "{{user_message}}"
 
 Responde ÚNICAMENTE con una de estas palabras: search, modify, recommend, conversation
 NO agregues explicaciones, solo la categoría.
 """
 
+
+def agent_router(state: AgentState) -> AgentState:
+    """
+    Classifies the user's intent to route to the correct agent.
+
+    Possible intents:
+    - search: Search, list, or retrieve book information
+    - modify: Create, update, or delete books
+    - recommend: Request recommendations or suggestions
+    - conversation: General questions with no specific book operation
+    """
+
+    user_message = state["user_message"]
+
+    prompt = langfuse.get_prompt("router-classifier", fallback=ROUTER_PROMPT)
+    classification_prompt = prompt.compile(user_message=user_message)
+
     try:
-        # Invocar el LLM para clasificar
         response = llm.invoke(classification_prompt)
         intent = response.content.strip().lower()
 
-        # Validar que la respuesta sea una de las intenciones válidas
         valid_intents = ["search", "modify", "recommend", "conversation"]
         if intent not in valid_intents:
-            # Si el LLM responde algo inválido, intentamos parsear
             for valid_intent in valid_intents:
                 if valid_intent in intent:
                     intent = valid_intent
                     break
             else:
-                # Por defecto, lo consideramos conversación
                 intent = "conversation"
 
-        # Actualizar el estado con la intención detectada
         state["intent"] = intent
         state["error"] = None
 

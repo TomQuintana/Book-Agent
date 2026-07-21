@@ -2,20 +2,18 @@
 
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
-from ..llm.client import llm
-from ..graph.state import AgentState, InternalAgentState
-from ..tools.book_tools import get_read_books
+
 from ..config.logging_config import get_logger
+from ..graph.state import AgentState, InternalAgentState
+from ..llm.client import llm
+from ..llm.langfuse_client import langfuse
+from ..tools.book_tools import get_read_books
 
 logger = get_logger("asta.recommend")
 
 
-recommend_agent = create_agent(
-    model=llm,
-    tools=[get_read_books],
-    state_schema=InternalAgentState,
-    checkpointer=InMemorySaver(),
-    system_prompt="""Eres un agente experto en literatura y recomendaciones de libros.
+# Prompt canónico: fallback si Langfuse no responde y fuente para el seed (scripts/seed_prompts.py)
+RECOMMEND_SYSTEM_PROMPT = """Eres un agente experto en literatura y recomendaciones de libros.
 
 Tu única responsabilidad es RECOMENDAR libros que el usuario aún no ha leído.
 
@@ -36,7 +34,17 @@ Reglas:
 - Si el usuario menciona libros en su mensaje, tenlos en cuenta aunque no estén en la DB.
 - Prioriza libros reconocidos y de calidad dentro del género o estilo preferido.
 - Si el usuario no da contexto suficiente, usa el historial de la DB para inferir gustos.
-- Si no hay historial y el usuario no da pistas, pide más contexto antes de recomendar.""",
+- Si no hay historial y el usuario no da pistas, pide más contexto antes de recomendar."""
+
+
+recommend_agent = create_agent(
+    model=llm,
+    tools=[get_read_books],
+    state_schema=InternalAgentState,
+    checkpointer=InMemorySaver(),
+    system_prompt=langfuse.get_prompt(
+        "recommend-agent", fallback=RECOMMEND_SYSTEM_PROMPT
+    ).prompt,
 )
 
 
@@ -67,16 +75,16 @@ def agent_recommend(state: AgentState) -> AgentState:
 
         messages = result["messages"]
 
-        tools_used = []
-        for msg in messages:
-            if hasattr(msg, "tool_calls") and msg.tool_calls:
-                for tool_call in msg.tool_calls:
-                    tool_info = {
-                        "name": tool_call.get("name", "unknown"),
-                        "args": tool_call.get("args", {}),
-                    }
-                    tools_used.append(tool_info)
-                    logger.debug(f"Tool llamada: {tool_info['name']}()")
+        # tools_used = []
+        # for msg in messages:
+        #     if hasattr(msg, "tool_calls") and msg.tool_calls:
+        #         for tool_call in msg.tool_calls:
+        #             tool_info = {
+        #                 "name": tool_call.get("name", "unknown"),
+        #                 "args": tool_call.get("args", {}),
+        #             }
+        #             tools_used.append(tool_info)
+        #             logger.debug(f"Tool llamada: {tool_info['name']}()")
 
         agent_response = messages[-1].content
 
@@ -88,7 +96,7 @@ def agent_recommend(state: AgentState) -> AgentState:
 
         state["metadata"]["node_executed"] = "agent_recommend"
         state["metadata"]["agent_type"] = "recommend_agent"
-        state["metadata"]["tools_used"] = tools_used
+        # state["metadata"]["tools_used"] = tools_used
 
         logger.debug(f"Completado: {agent_response[:150]}...")
 
