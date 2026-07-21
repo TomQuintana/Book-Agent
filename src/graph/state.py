@@ -5,7 +5,6 @@ from langchain.agents import AgentState as LangChainAgentState
 
 
 def keep_last_5_iterations(existing: list, new: list) -> list:
-    print('Messages:', (existing + new)[-10:])
     return (existing + new)[-10:]
 
 
