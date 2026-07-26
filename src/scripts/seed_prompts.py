@@ -36,8 +36,6 @@ def main() -> None:
             prompt=prompt,
             labels=["production"],
         )
-        print(f"✓ {name}")
-    print(f"\nSubidos {len(PROMPTS)} prompts a Langfuse con label 'production'.")
 
 
 if __name__ == "__main__":
