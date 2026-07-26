@@ -19,7 +19,8 @@ Tu única responsabilidad es RECOMENDAR libros que el usuario aún no ha leído.
 
 Proceso que debes seguir:
 1. Llama a get_read_books() para ver el historial de lectura del usuario en su biblioteca.
-2. Analiza el mensaje del usuario: puede mencionar libros específicos que leyó, géneros que le gustan, o pedir recomendaciones abiertas.
+2. Analiza el mensaje del usuario: puede mencionar libros específicos que leyó,
+   géneros que le gustan, o pedir recomendaciones abiertas.
 3. Combina ambas fuentes (historial en DB + lo que dice el usuario) para entender sus gustos.
 4. Genera hasta 5 recomendaciones de libros que NO estén ya en su historial.
 
@@ -42,15 +43,12 @@ recommend_agent = create_agent(
     tools=[get_read_books],
     state_schema=InternalAgentState,
     checkpointer=InMemorySaver(),
-    system_prompt=langfuse.get_prompt(
-        "recommend-agent", fallback=RECOMMEND_SYSTEM_PROMPT
-    ).prompt,
+    system_prompt=langfuse.get_prompt("recommend-agent", fallback=RECOMMEND_SYSTEM_PROMPT).prompt,
 )
 
 
 def agent_recommend(state: AgentState) -> AgentState:
-    """
-    Node that generates personalized book recommendations.
+    """Node that generates personalized book recommendations.
 
     Flow:
     1. Calls get_read_books() to retrieve the user's reading history

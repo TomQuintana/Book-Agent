@@ -8,8 +8,8 @@ from ..llm.langfuse_client import langfuse
 logger = get_logger("asta.formatter")
 
 
-# Prompts canónicos: fallback si Langfuse no responde y fuente para el seed (scripts/seed_prompts.py)
-# Variables en sintaxis mustache de Langfuse: {{...}}
+# Prompts canónicos: fallback si Langfuse no responde y fuente para el
+# seed (scripts/seed_prompts.py). Variables en sintaxis mustache: {{...}}
 FORMATTER_ERROR_PROMPT = """El usuario preguntó: "{{user_message}}"
 
 Hubo un error al procesar su consulta: {{error}}
@@ -36,8 +36,7 @@ IMPORTANTE: NO inventes información. Solo usa los datos proporcionados en los r
 
 
 def agent_formatter(state: AgentState) -> AgentState:
-    """
-    Final node that formats the response for the user in a friendly way.
+    """Final node that formats the response for the user in a friendly way.
 
     This node:
     1. Takes intermediate results (from search_node, modify_node, etc.)
@@ -51,7 +50,6 @@ def agent_formatter(state: AgentState) -> AgentState:
     Returns:
         Updated state with final_response
     """
-
     intermediate_result = state.get("intermediate_result")
     intent = state.get("intent")
     user_message = state.get("user_message")
@@ -73,17 +71,15 @@ def agent_formatter(state: AgentState) -> AgentState:
             return state
 
         if not intermediate_result:
-            state["final_response"] = (
-                "Lo siento, no pude procesar tu consulta correctamente."
-            )
+            state["final_response"] = "Lo siento, no pude procesar tu consulta correctamente."
             logger.warning("No hay resultados intermedios")
             return state
 
         clean_result = intermediate_result
 
-        format_prompt = langfuse.get_prompt(
-            "formatter", fallback=FORMATTER_PROMPT
-        ).compile(user_message=user_message, intent=intent, clean_result=clean_result)
+        format_prompt = langfuse.get_prompt("formatter", fallback=FORMATTER_PROMPT).compile(
+            user_message=user_message, intent=intent, clean_result=clean_result
+        )
 
         response = llm.invoke(format_prompt)
         final_text = response.content.strip()

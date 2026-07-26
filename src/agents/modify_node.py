@@ -43,9 +43,7 @@ modify_agent = create_agent(
     tools=[create_book, update_book, delete_book],
     state_schema=InternalAgentState,
     checkpointer=InMemorySaver(),
-    system_prompt=langfuse.get_prompt(
-        "modify-agent", fallback=MODIFY_SYSTEM_PROMPT
-    ).prompt,
+    system_prompt=langfuse.get_prompt("modify-agent", fallback=MODIFY_SYSTEM_PROMPT).prompt,
 )
 
 

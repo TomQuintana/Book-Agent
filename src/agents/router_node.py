@@ -23,7 +23,8 @@ Analiza el siguiente mensaje del usuario y clasifica su intención en UNA de est
 3. "recommend" - Si pide recomendaciones, sugerencias o consejos sobre qué leer
    Ejemplos: "recomiéndame un libro", "qué debería leer ahora", "sugiéreme algo de ciencia ficción"
 
-4. "conversation" - Si es una pregunta general, saludo o no está relacionado con operaciones de libros
+4. "conversation" - Si es una pregunta general, saludo o no está relacionado
+   con operaciones de libros
    Ejemplos: "hola", "cómo estás", "qué puedes hacer", "explícame qué es un libro"
 
 Mensaje del usuario: "{{user_message}}"
@@ -34,8 +35,7 @@ NO agregues explicaciones, solo la categoría.
 
 
 def agent_router(state: AgentState) -> AgentState:
-    """
-    Classifies the user's intent to route to the correct agent.
+    """Classifies the user's intent to route to the correct agent.
 
     Possible intents:
     - search: Search, list, or retrieve book information
@@ -43,7 +43,6 @@ def agent_router(state: AgentState) -> AgentState:
     - recommend: Request recommendations or suggestions
     - conversation: General questions with no specific book operation
     """
-
     user_message = state["user_message"]
 
     prompt = langfuse.get_prompt("router-classifier", fallback=ROUTER_PROMPT)

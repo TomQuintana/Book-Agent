@@ -2,11 +2,12 @@
 
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
+
+from ..config.logging_config import get_logger
+from ..graph.state import AgentState, InternalAgentState
 from ..llm.client import llm
 from ..llm.langfuse_client import langfuse
-from ..graph.state import AgentState, InternalAgentState
-from ..tools.book_tools import list_books, get_book
-from ..config.logging_config import get_logger
+from ..tools.book_tools import get_book, list_books
 
 logger = get_logger("asta.search")
 
@@ -37,7 +38,8 @@ Herramientas disponibles:
 IMPORTANTE:
 - Para búsquedas por título o autor, USA list_books() con los parámetros correspondientes
 - Para búsquedas por ID específico, USA get_book(book_id)
-- Si el usuario pide crear, actualizar o eliminar libros, responde amablemente que esa no es tu especialidad
+- Si el usuario pide crear, actualizar o eliminar libros, responde amablemente
+  que esa no es tu especialidad
 - Las búsquedas son case-insensitive y parciales (no necesitan ser exactas)
 
 Ejemplos:
@@ -56,15 +58,12 @@ search_agent = create_agent(
     tools=[list_books, get_book],  # Solo tools de búsqueda/consulta
     state_schema=InternalAgentState,
     checkpointer=InMemorySaver(),
-    system_prompt=langfuse.get_prompt(
-        "search-agent", fallback=SEARCH_SYSTEM_PROMPT
-    ).prompt,
+    system_prompt=langfuse.get_prompt("search-agent", fallback=SEARCH_SYSTEM_PROMPT).prompt,
 )
 
 
 def agent_search(state: AgentState) -> AgentState:
-    """
-    Node that processes search queries using a specialized internal agent.
+    """Node that processes search queries using a specialized internal agent.
 
     Flow:
     1. Receives the user message from the state
@@ -85,7 +84,6 @@ def agent_search(state: AgentState) -> AgentState:
         - "Show completed books"
         - "Get info for book with ID 5"
     """
-
     user_message = state["user_message"]
 
     try:
@@ -120,9 +118,7 @@ def agent_search(state: AgentState) -> AgentState:
                 tool_results.append(
                     {
                         "tool": getattr(msg, "name", "unknown"),
-                        "result": msg.content[:200]
-                        if hasattr(msg, "content")
-                        else "No content",
+                        "result": msg.content[:200] if hasattr(msg, "content") else "No content",
                     }
                 )
                 logger.debug(f"Tool resultado: {msg.content[:100]}...")
@@ -161,9 +157,7 @@ def agent_search(state: AgentState) -> AgentState:
         error_msg = f"Error en nodo de búsqueda: {str(e)}"
         logger.error(error_msg)
 
-        state["intermediate_result"] = (
-            "No se pudieron obtener resultados de la búsqueda."
-        )
+        state["intermediate_result"] = "No se pudieron obtener resultados de la búsqueda."
         state["error"] = error_msg
 
     return state

@@ -1,3 +1,5 @@
+"""API route definitions for the ASTA multi-agent book service."""
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -7,10 +9,14 @@ router = APIRouter()
 
 
 class QueryRequest(BaseModel):
+    """Request body for the /query endpoint."""
+
     message: str
 
 
 class QueryResponse(BaseModel):
+    """Response body returned by the /query endpoint."""
+
     response: str
     intent: str
     success: bool
@@ -18,13 +24,13 @@ class QueryResponse(BaseModel):
 
 @router.get("/")
 async def root():
+    """Welcome endpoint with basic API information."""
     return {"message": "Welcome to ASTA API - Book Management System with Multi-Agent LangGraph"}
 
 
 @router.get("/ask")
 async def ask_agent(question: str):
-    """
-    GET endpoint that processes a question using the multi-agent graph system.
+    """GET endpoint that processes a question using the multi-agent graph system.
 
     The graph automatically:
     1. Classifies the intent (search/modify/recommend/conversation)
@@ -43,23 +49,19 @@ async def ask_agent(question: str):
     result = graph_service.process_query(question)
 
     if not result["success"]:
-        raise HTTPException(
-            status_code=500,
-            detail=result["error"]
-        )
+        raise HTTPException(status_code=500, detail=result["error"])
 
     return {
         "question": question,
         "answer": result["response"],
         "intent": result["intent"],
-        "metadata": result["metadata"]
+        "metadata": result["metadata"],
     }
 
 
 @router.post("/query")
 async def process_query(request: QueryRequest) -> QueryResponse:
-    """
-    POST endpoint that processes a query using the multi-agent graph system.
+    """POST endpoint that processes a query using the multi-agent graph system.
 
     The LangGraph multi-agent system:
     - Router node: Classifies user intent (search/modify/recommend/conversation)
@@ -79,22 +81,16 @@ async def process_query(request: QueryRequest) -> QueryResponse:
     result = graph_service.process_query(request.message)
 
     if not result["success"]:
-        raise HTTPException(
-            status_code=500,
-            detail=result["error"]
-        )
+        raise HTTPException(status_code=500, detail=result["error"])
 
     return QueryResponse(
-        response=result["response"],
-        intent=result["intent"] or "unknown",
-        success=result["success"]
+        response=result["response"], intent=result["intent"] or "unknown", success=result["success"]
     )
 
 
 @router.get("/graph/visualize")
 async def visualize_graph():
-    """
-    Endpoint to visualize the multi-agent graph structure.
+    """Endpoint to visualize the multi-agent graph structure.
 
     Returns a Mermaid diagram of the graph for debugging and documentation.
 
@@ -106,10 +102,9 @@ async def visualize_graph():
         return {
             "format": "mermaid",
             "diagram": mermaid_diagram,
-            "info": "You can visualize this diagram at https://mermaid.live/"
+            "info": "You can visualize this diagram at https://mermaid.live/",
         }
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Error generating visualization: {str(e)}"
-        )
+            status_code=500, detail=f"Error generating visualization: {str(e)}"
+        ) from e

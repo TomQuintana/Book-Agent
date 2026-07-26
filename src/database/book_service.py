@@ -1,13 +1,16 @@
-from typing import List, Optional
+"""Book service with CRUD operations backed by the database."""
+
 from sqlmodel import select
-from .models import Book, BookCreate, BookUpdate
+
 from .connection import get_session
+from .models import Book, BookCreate, BookUpdate
 
 
 class BookService:
     """Service for book CRUD operations."""
 
     def create_book(self, book_data: BookCreate) -> Book:
+        """Create and persist a new book."""
         with get_session() as session:
             book = Book.model_validate(book_data)
             session.add(book)
@@ -15,11 +18,13 @@ class BookService:
             session.refresh(book)
             return book
 
-    def get_book(self, book_id: int) -> Optional[Book]:
+    def get_book(self, book_id: int) -> Book | None:
+        """Fetch a book by id, or None if it doesn't exist."""
         with get_session() as session:
             return session.get(Book, book_id)
 
-    def update_book(self, book_id: int, book_data: BookUpdate) -> Optional[Book]:
+    def update_book(self, book_id: int, book_data: BookUpdate) -> Book | None:
+        """Update the given fields of a book, or return None if it doesn't exist."""
         with get_session() as session:
             book = session.get(Book, book_id)
             if not book:
@@ -33,6 +38,7 @@ class BookService:
             return book
 
     def delete_book(self, book_id: int) -> bool:
+        """Delete a book by id. Returns False if it doesn't exist."""
         with get_session() as session:
             book = session.get(Book, book_id)
             if not book:
@@ -41,7 +47,8 @@ class BookService:
             session.commit()
             return True
 
-    def list_books(self, status: str = None, author: str = None) -> List[Book]:
+    def list_books(self, status: str = None, author: str = None) -> list[Book]:
+        """List books, optionally filtered by status and/or author."""
         with get_session() as session:
             query = select(Book)
             if status:
@@ -50,5 +57,3 @@ class BookService:
                 query = query.where(Book.author.contains(author))
             query = query.order_by(Book.created_at.desc())
             return session.exec(query).all()
-
-

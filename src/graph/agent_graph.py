@@ -1,19 +1,20 @@
+"""Builds and compiles the multi-agent LangGraph graph."""
+
 from langgraph.graph import END, StateGraph
 
-from ..config.logging_config import get_logger
 from ..agents.formatter_node import agent_formatter
 from ..agents.modify_node import agent_modify
 from ..agents.recommend_node import agent_recommend
 from ..agents.router_node import agent_router
 from ..agents.search_node import agent_search
+from ..config.logging_config import get_logger
 from .state import AgentState
 
 logger = get_logger("asta.graph")
 
 
 def route_decision(state: AgentState) -> str:
-    """
-    Routing function that decides which node to go to based on the intent.
+    """Routing function that decides which node to go to based on the intent.
 
     Args:
         state: Current state with the intent classified by the router
@@ -55,9 +56,7 @@ graph.add_node("formatter", agent_formatter)
 def unknown_node(state: AgentState) -> AgentState:
     """Temporary node for unimplemented intents."""
     intent = state.get("intent")
-    state["intermediate_result"] = (
-        f"El intent '{intent}' aún no está implementado"
-    )
+    state["intermediate_result"] = f"El intent '{intent}' aún no está implementado"
     state["error"] = None
     return state
 

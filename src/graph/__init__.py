@@ -1,7 +1,7 @@
-"""Módulo del grafo multiagente con LangGraph"""
+"""Multi-agent graph module built with LangGraph."""
 
-from .graph_service import graph_service, GraphService
-from .state import AgentState
 from .agent_graph import app
+from .graph_service import GraphService, graph_service
+from .state import AgentState
 
-__all__ = ['graph_service', 'GraphService', 'AgentState', 'app']
+__all__ = ["graph_service", "GraphService", "AgentState", "app"]

@@ -21,4 +21,10 @@ wheels/
 # Guides
 MULTIAGENTE_GUIDE.md
 CLAUDE.md
+structure_agent.md
 
+# Notas de planificación (locales)
+TODO.md
+
+# Data
+src/data/
