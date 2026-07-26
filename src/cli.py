@@ -1,15 +1,14 @@
-"""ASTA CLI - Terminal interface para el agente multiagente de libros"""
+"""ASTA CLI - terminal interface for the multi-agent book assistant."""
 
-import sys
+from prompt_toolkit import PromptSession
+from prompt_toolkit.formatted_text import ANSI
+from prompt_toolkit.history import FileHistory
 from rich.console import Console
+from rich.live import Live
 from rich.panel import Panel
+from rich.spinner import Spinner
 from rich.text import Text
 from rich.theme import Theme
-from rich.live import Live
-from rich.spinner import Spinner
-from prompt_toolkit import PromptSession
-from prompt_toolkit.history import FileHistory
-from prompt_toolkit.formatted_text import ANSI
 
 from src.config.logging_config import setup_logging
 from src.database.connection import init_db
@@ -74,9 +73,7 @@ def print_help():
         lines.append(f"  {cmd:<12}", style="bold white")
         lines.append(f"{desc}\n", style="dim")
 
-    console.print(
-        Panel(lines, title="Comandos", border_style="border", padding=(0, 1))
-    )
+    console.print(Panel(lines, title="Comandos", border_style="border", padding=(0, 1)))
 
 
 def print_response(result: dict):
@@ -148,7 +145,9 @@ def main():
 
             if user_input.startswith("/"):
                 console.print(f"  Comando no reconocido: {user_input}", style="warning")
-                console.print("  Escribí [bold]/help[/bold] para ver los comandos disponibles.\n", style="dim")
+                console.print(
+                    "  Escribí [bold]/help[/bold] para ver los comandos disponibles.\n", style="dim"
+                )
                 continue
 
             # Procesar con el agente

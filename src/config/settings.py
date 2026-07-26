@@ -1,10 +1,15 @@
+"""Application settings loaded from environment variables."""
+
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
 class Settings:
+    """Application configuration values sourced from environment variables."""
+
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///src/data/books.db")
     LANGSMITH_TRACING: str = os.getenv("LANGSMITH_TRACING", "true")

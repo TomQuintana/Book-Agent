@@ -1,11 +1,8 @@
 """Service for running the LangGraph multi-agent graph."""
 
-from typing import Optional
-
 from langfuse.langchain import CallbackHandler
 
 from ..config.logging_config import get_logger
-from ..config.settings import settings
 from .agent_graph import app as agent_graph
 from .state import AgentState
 
@@ -15,8 +12,7 @@ langfuse_handler = CallbackHandler()
 
 
 class GraphService:
-    """
-    Service for processing user queries through the multi-agent graph.
+    """Service for processing user queries through the multi-agent graph.
 
     This service:
     - Initializes the graph state with the user query
@@ -29,9 +25,8 @@ class GraphService:
         """Initializes the service with the compiled graph."""
         self.graph = agent_graph
 
-    def process_query(self, user_message: str, metadata: Optional[dict] = None) -> dict:
-        """
-        Processes a user query through the multi-agent graph.
+    def process_query(self, user_message: str, metadata: dict | None = None) -> dict:
+        """Processes a user query through the multi-agent graph.
 
         Flow:
         1. Router classifies the intent (search/modify/recommend/conversation)
@@ -72,9 +67,7 @@ class GraphService:
 
             # Ejecutar el grafo completo
             logger.info(f"Procesando: '{user_message}'")
-            result = self.graph.invoke(
-                initial_state, config={"callbacks": [langfuse_handler]}
-            )
+            result = self.graph.invoke(initial_state, config={"callbacks": [langfuse_handler]})
             logger.debug(f"Estado final: {result}")
 
             # Verificar si hubo errores durante la ejecución
@@ -113,8 +106,7 @@ class GraphService:
             }
 
     def get_graph_visualization(self) -> str:
-        """
-        Returns a Mermaid diagram of the graph for debugging and documentation.
+        """Returns a Mermaid diagram of the graph for debugging and documentation.
 
         Returns:
             String with the Mermaid diagram of the graph

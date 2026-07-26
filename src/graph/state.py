@@ -1,15 +1,18 @@
 """Shared state for the multi-agent graph."""
 
-from typing import TypedDict, Optional, Literal, Annotated
+from typing import Annotated, Literal, TypedDict
+
 from langchain.agents import AgentState as LangChainAgentState
 
 
 def keep_last_5_iterations(existing: list, new: list) -> list:
+    """Reducer that keeps only the last 5 conversation turns (10 messages)."""
     return (existing + new)[-10:]
 
 
 class InternalAgentState(LangChainAgentState):
     """Internal agent state with a sliding window of the last 5 conversation turns."""
+
     messages: Annotated[list, keep_last_5_iterations]
 
 
@@ -23,16 +26,16 @@ class AgentState(TypedDict):
     user_message: str
 
     # Intención detectada por el router
-    intent: Optional[Literal["search", "modify", "recommend", "conversation"]]
+    intent: Literal["search", "modify", "recommend", "conversation"] | None
 
     # Resultados intermedios de los nodos
-    intermediate_result: Optional[str]
+    intermediate_result: str | None
 
     # Respuesta final formateada
-    final_response: Optional[str]
+    final_response: str | None
 
     # Información de error si algo falla
-    error: Optional[str]
+    error: str | None
 
     # Metadata adicional
-    metadata: Optional[dict]
+    metadata: dict | None

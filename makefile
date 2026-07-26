@@ -10,3 +10,12 @@ eval-router:
 
 eval-view:
 	npx promptfoo view
+
+lint:
+	uv run ruff check .
+
+install-hooks:
+	git config core.hooksPath .githooks
+
+format:
+	uv run ruff format .

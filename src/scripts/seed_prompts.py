@@ -1,20 +1,21 @@
-"""Sube los prompts locales a Langfuse Prompt Management (correr una sola vez).
+"""Upload local prompts to Langfuse Prompt Management (run once).
 
-Uso (desde la raíz del proyecto):
+Usage (from the project root):
     uv run python -m src.scripts.seed_prompts
 
-Idempotencia: create_prompt crea una NUEVA versión si el prompt ya existe.
-Correrlo dos veces no rompe nada, solo agrega versiones duplicadas con label
-'production'. Las constantes importadas de cada nodo son la fuente de verdad.
+Idempotency: create_prompt creates a NEW version if the prompt already
+exists. Running it twice is safe, it just adds duplicate versions with the
+'production' label. The constants imported from each node are the source
+of truth.
 """
+
 import src.graph  # noqa: F401 — inicializa el paquete graph antes de importar nodos (evita import circular)
-from src.llm.langfuse_client import langfuse
-from src.agents.router_node import ROUTER_PROMPT
-from src.agents.search_node import SEARCH_SYSTEM_PROMPT
+from src.agents.formatter_node import FORMATTER_ERROR_PROMPT, FORMATTER_PROMPT
 from src.agents.modify_node import MODIFY_SYSTEM_PROMPT
 from src.agents.recommend_node import RECOMMEND_SYSTEM_PROMPT
-from src.agents.formatter_node import FORMATTER_PROMPT, FORMATTER_ERROR_PROMPT
-
+from src.agents.router_node import ROUTER_PROMPT
+from src.agents.search_node import SEARCH_SYSTEM_PROMPT
+from src.llm.langfuse_client import langfuse
 
 PROMPTS = {
     "router-classifier": ROUTER_PROMPT,
@@ -27,6 +28,7 @@ PROMPTS = {
 
 
 def main() -> None:
+    """Create/update all PROMPTS in Langfuse with the 'production' label."""
     for name, prompt in PROMPTS.items():
         langfuse.create_prompt(
             name=name,
@@ -34,8 +36,6 @@ def main() -> None:
             prompt=prompt,
             labels=["production"],
         )
-        print(f"✓ {name}")
-    print(f"\nSubidos {len(PROMPTS)} prompts a Langfuse con label 'production'.")
 
 
 if __name__ == "__main__":

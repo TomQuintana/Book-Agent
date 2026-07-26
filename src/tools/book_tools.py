@@ -1,14 +1,15 @@
+"""LangChain tools exposing book CRUD operations to the agent."""
+
 from datetime import date
 
 from langchain_core.tools import tool
 
 from ..database.book_service import BookService
-
 from ..database.models import BookCreate, BookUpdate
 
 book_service = BookService()
 
-
+#TODO: see a type by default
 @tool
 def create_book(
     title: str,
@@ -99,9 +100,7 @@ def update_book(
         Confirmation message with the updated data
     """
     try:
-        book_data = BookUpdate(
-            title=title, author=author, status=status, description=description
-        )
+        book_data = BookUpdate(title=title, author=author, status=status, description=description)
         book = book_service.update_book(book_id, book_data)
         if not book:
             return f"No se encontró ningún libro con ID {book_id}"
@@ -162,11 +161,7 @@ def list_books(status: str = None, author: str = None, title: str = None) -> str
         # Filtrar por título si se especifica
         if title and books:
             title_lower = title.lower()
-            books = [
-                book
-                for book in books
-                if book.title and title_lower in book.title.lower()
-            ]
+            books = [book for book in books if book.title and title_lower in book.title.lower()]
 
         if not books:
             filters = []
@@ -214,7 +209,9 @@ def get_read_books() -> str:
         all_read = completed + reading
 
         if not all_read:
-            return "El usuario no tiene libros registrados como leídos o en progreso en su biblioteca."
+            return (
+                "El usuario no tiene libros registrados como leídos o en progreso en su biblioteca."
+            )
 
         result = f"Historial de lectura del usuario ({len(all_read)} libro(s)):\n\n"
 

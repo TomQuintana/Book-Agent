@@ -1,8 +1,12 @@
-from fastapi import FastAPI
-from .routes import router
+"""FastAPI application entrypoint for the ASTA API."""
+
 from contextlib import asynccontextmanager
-from ..database.connection import init_db
+
+from fastapi import FastAPI
+
 from ..config.logging_config import get_logger
+from ..database.connection import init_db
+from .routes import router
 
 logger = get_logger("asta.api")
 app = FastAPI(title="ASTA API", version="0.1.0")

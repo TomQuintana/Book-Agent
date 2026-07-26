@@ -1,4 +1,7 @@
-from sqlmodel import SQLModel, Session, create_engine
+"""Database engine and session management."""
+
+from sqlmodel import Session, SQLModel, create_engine
+
 from src.config.settings import settings
 
 engine = create_engine(settings.DATABASE_URL, echo=False)
