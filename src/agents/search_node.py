@@ -1,9 +1,9 @@
 """Search Node — Specialized agent for book search queries."""
 
 from langchain.agents import create_agent
-from langgraph.checkpoint.memory import InMemorySaver
 
 from ..config.logging_config import get_logger
+from ..graph.checkpointer import checkpointer
 from ..graph.state import AgentState, InternalAgentState
 from ..llm.client import llm
 from ..llm.langfuse_client import langfuse
@@ -57,7 +57,7 @@ search_agent = create_agent(
     model=llm,
     tools=[list_books, get_book],  # Solo tools de búsqueda/consulta
     state_schema=InternalAgentState,
-    checkpointer=InMemorySaver(),
+    checkpointer=checkpointer,
     system_prompt=langfuse.get_prompt("search-agent", fallback=SEARCH_SYSTEM_PROMPT).prompt,
 )
 
@@ -92,7 +92,7 @@ def agent_search(state: AgentState) -> AgentState:
         # El agente interno decide automáticamente qué tool usar
         result = search_agent.invoke(
             {"messages": [{"role": "user", "content": user_message}]},
-            {"configurable": {"thread_id": "book_agent_session"}},
+            {"configurable": {"thread_id": state.get("thread_id") or "book_agent_session"}},
         )
 
         # Extraer todos los mensajes para debugging

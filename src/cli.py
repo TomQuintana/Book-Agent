@@ -1,5 +1,9 @@
 """ASTA CLI - terminal interface for the multi-agent book assistant."""
 
+import os
+import uuid
+
+import httpx
 from prompt_toolkit import PromptSession
 from prompt_toolkit.formatted_text import ANSI
 from prompt_toolkit.history import FileHistory
@@ -31,6 +35,8 @@ ASTA_THEME = Theme(
 
 console = Console(theme=ASTA_THEME)
 
+API_BASE_URL = os.getenv("ASTA_API_URL", "http://localhost:8000")
+
 CAT_LOGO = r"""
   /\_/\
  ( o.o )
@@ -39,6 +45,8 @@ CAT_LOGO = r"""
 
 COMMANDS = {
     "/help": "Muestra los comandos disponibles",
+    "/new": "Inicia una nueva conversación (nuevo thread)",
+    "/conversations": "Lista conversaciones y salta a una previa",
     "/clear": "Limpia la pantalla",
     "/exit": "Salir de ASTA CLI",
 }
@@ -109,6 +117,66 @@ def get_prompt_text():
     return ANSI("\033[1;37m🐱 asta\033[0m \033[2;37m>\033[0m ")
 
 
+def switch_conversation(session: PromptSession) -> str | None:
+    """Lista conversaciones vía la API y deja elegir una para saltar a ella.
+
+    Devuelve el thread_id elegido, o None si se cancela / hay error.
+    """
+    try:
+        resp = httpx.get(f"{API_BASE_URL}/conversations", timeout=5)
+        resp.raise_for_status()
+        conversations = resp.json().get("conversations", [])
+    except httpx.HTTPError:
+        console.print(
+            f"\n  No se pudo contactar la API en {API_BASE_URL}. ¿Está levantado el server?\n",
+            style="error",
+        )
+        return None
+
+    if not conversations:
+        console.print("\n  No hay conversaciones previas.\n", style="dim")
+        return None
+
+    lines = Text()
+    for i, conv in enumerate(conversations, start=1):
+        thread_id = conv["thread_id"]
+        turns = conv.get("checkpoints", 0)
+        lines.append(f"  {i:>2}. ", style="bold white")
+        lines.append(f"{thread_id[:8]}", style="response")
+        lines.append(f"  ({turns} turnos)\n", style="dim")
+    console.print(Panel(lines, title="Conversaciones", border_style="border", padding=(0, 1)))
+
+    choice = session.prompt("  Elegí un número (Enter para cancelar): ").strip()
+    if not choice.isdigit() or not (1 <= int(choice) <= len(conversations)):
+        console.print("  Cancelado.\n", style="dim")
+        return None
+
+    thread_id = conversations[int(choice) - 1]["thread_id"]
+
+    try:
+        resp = httpx.get(f"{API_BASE_URL}/conversations/{thread_id}", timeout=5)
+        resp.raise_for_status()
+        messages = resp.json().get("messages", [])
+    except httpx.HTTPError:
+        console.print("\n  No se pudo cargar el historial.\n", style="error")
+        return None
+
+    history = Text()
+    for m in messages:
+        history.append(f"{m['role']}: ", style="bold white")
+        history.append(f"{m['content']}\n", style="response")
+    console.print(
+        Panel(
+            history if messages else Text("(sin mensajes)", style="dim"),
+            title=f"[dim]historial: {thread_id[:8]}[/dim]",
+            border_style="border",
+            padding=(1, 2),
+        )
+    )
+    console.print()
+    return thread_id
+
+
 def main():
     """Main CLI loop."""
     setup_logging()
@@ -122,6 +190,9 @@ def main():
     session = PromptSession(
         history=FileHistory(".asta_history"),
     )
+
+    # Una conversación por sesión de CLI; /new arranca otra.
+    thread_id = str(uuid.uuid4())
 
     while True:
         try:
@@ -143,6 +214,18 @@ def main():
                 print_help()
                 continue
 
+            if user_input.lower() == "/new":
+                thread_id = str(uuid.uuid4())
+                console.print("\n  Nueva conversación iniciada 🐱\n", style="success")
+                continue
+
+            if user_input.lower() == "/conversations":
+                picked = switch_conversation(session)
+                if picked:
+                    thread_id = picked
+                    console.print(f"  Continuando conversación {picked[:8]} 🐱\n", style="success")
+                continue
+
             if user_input.startswith("/"):
                 console.print(f"  Comando no reconocido: {user_input}", style="warning")
                 console.print(
@@ -156,7 +239,7 @@ def main():
                 console=console,
                 transient=True,
             ):
-                result = graph_service.process_query(user_input)
+                result = graph_service.process_query(user_input, thread_id=thread_id)
 
             print_response(result)
 

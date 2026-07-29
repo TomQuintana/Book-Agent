@@ -9,7 +9,8 @@ from ..database.models import BookCreate, BookUpdate
 
 book_service = BookService()
 
-#TODO: see a type by default
+
+# TODO: see a type by default
 @tool
 def create_book(
     title: str,

@@ -22,20 +22,16 @@ class AgentState(TypedDict):
     Passed from node to node, allowing each one to read data and append its results.
     """
 
-    # Entrada del usuario
+    thread_id: str | None
+
     user_message: str
 
-    # Intención detectada por el router
     intent: Literal["search", "modify", "recommend", "conversation"] | None
 
-    # Resultados intermedios de los nodos
     intermediate_result: str | None
 
-    # Respuesta final formateada
     final_response: str | None
 
-    # Información de error si algo falla
     error: str | None
 
-    # Metadata adicional
     metadata: dict | None
