@@ -4,8 +4,8 @@ from datetime import date
 
 from langchain_core.tools import tool
 
-from ..database.book_service import BookService
 from ..database.models import BookCreate, BookUpdate
+from ..services.book_service import BookService
 
 book_service = BookService()
 
