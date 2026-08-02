@@ -37,6 +37,10 @@ select = ["E", "F", "I", "UP", "B", "D", "T20"]
 # D104 (paquete __init__) y D107 (__init__ method) fuera: no se exige docstring ahí
 ignore = ["D104", "D107"]
 
+[tool.ruff.lint.flake8-bugbear]
+# Depends/Query/etc. en defaults es el patrón de FastAPI, no un B008 real
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Path", "fastapi.Body"]
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
