@@ -1,9 +1,9 @@
 """Recommend Node — Specialized agent for book recommendations."""
 
 from langchain.agents import create_agent
-from langgraph.checkpoint.memory import InMemorySaver
 
 from ..config.logging_config import get_logger
+from ..graph.checkpointer import checkpointer
 from ..graph.state import AgentState, InternalAgentState
 from ..llm.client import llm
 from ..llm.langfuse_client import langfuse
@@ -42,7 +42,7 @@ recommend_agent = create_agent(
     model=llm,
     tools=[get_read_books],
     state_schema=InternalAgentState,
-    checkpointer=InMemorySaver(),
+    checkpointer=checkpointer,
     system_prompt=langfuse.get_prompt("recommend-agent", fallback=RECOMMEND_SYSTEM_PROMPT).prompt,
 )
 
@@ -68,7 +68,7 @@ def agent_recommend(state: AgentState) -> AgentState:
 
         result = recommend_agent.invoke(
             {"messages": [{"role": "user", "content": user_message}]},
-            {"configurable": {"thread_id": "book_agent_session"}},
+            {"configurable": {"thread_id": state.get("thread_id") or "book_agent_session"}},
         )
 
         messages = result["messages"]

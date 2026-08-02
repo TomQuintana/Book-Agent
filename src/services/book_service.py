@@ -2,8 +2,8 @@
 
 from sqlmodel import select
 
-from .connection import get_session
-from .models import Book, BookCreate, BookUpdate
+from ..database.connection import get_session
+from ..database.models import Book, BookCreate, BookUpdate
 
 
 class BookService:

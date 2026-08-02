@@ -1,9 +1,9 @@
 """Modify Node — Specialized agent for creating, updating and deleting books."""
 
 from langchain.agents import create_agent
-from langgraph.checkpoint.memory import InMemorySaver
 
 from ..config.logging_config import get_logger
+from ..graph.checkpointer import checkpointer
 from ..graph.state import AgentState, InternalAgentState
 from ..llm.client import llm
 from ..llm.langfuse_client import langfuse
@@ -42,7 +42,7 @@ modify_agent = create_agent(
     model=llm,
     tools=[create_book, update_book, delete_book],
     state_schema=InternalAgentState,
-    checkpointer=InMemorySaver(),
+    checkpointer=checkpointer,
     system_prompt=langfuse.get_prompt("modify-agent", fallback=MODIFY_SYSTEM_PROMPT).prompt,
 )
 
@@ -54,7 +54,7 @@ def agent_modify(state: AgentState) -> AgentState:
     try:
         result = modify_agent.invoke(
             {"messages": [{"role": "user", "content": user_message}]},
-            {"configurable": {"thread_id": "book_agent_session"}},
+            {"configurable": {"thread_id": state.get("thread_id") or "book_agent_session"}},
         )
 
         messages = result["messages"]

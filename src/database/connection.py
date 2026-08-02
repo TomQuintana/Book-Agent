@@ -1,5 +1,7 @@
 """Database engine and session management."""
 
+from collections.abc import Generator
+
 from sqlmodel import Session, SQLModel, create_engine
 
 from src.config.settings import settings
@@ -13,5 +15,11 @@ async def init_db():
 
 
 def get_session() -> Session:
-    """Returns a new database session."""
+    """Returns a new database session (caller is responsible for closing it)."""
     return Session(engine)
+
+
+def get_db() -> Generator[Session]:
+    """FastAPI dependency: yields a session and closes it after the request."""
+    with Session(engine) as session:
+        yield session

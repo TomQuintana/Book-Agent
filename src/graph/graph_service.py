@@ -25,7 +25,9 @@ class GraphService:
         """Initializes the service with the compiled graph."""
         self.graph = agent_graph
 
-    def process_query(self, user_message: str, metadata: dict | None = None) -> dict:
+    def process_query(
+        self, user_message: str, thread_id: str | None = None, metadata: dict | None = None
+    ) -> dict:
         """Processes a user query through the multi-agent graph.
 
         Flow:
@@ -35,6 +37,7 @@ class GraphService:
 
         Args:
             user_message: User message or query
+            thread_id: Conversation/session ID for state persistence (None starts a new one)
             metadata: Optional additional data (user_id, session_id, etc.)
 
         Returns:
@@ -45,6 +48,7 @@ class GraphService:
                 "success": bool,      # Whether it completed successfully
                 "error": str | None,  # Error message if it failed
                 "metadata": dict      # Additional metadata
+                "thread_id": str        # Thread/session ID for context
             }
 
         Example:
@@ -55,8 +59,10 @@ class GraphService:
             "search"
         """
         try:
-            # Construir estado inicial
+            thread_id = thread_id or "book_agent_session"
+
             initial_state: AgentState = {
+                "thread_id": thread_id,
                 "user_message": user_message,
                 "intent": None,
                 "intermediate_result": None,
@@ -70,36 +76,36 @@ class GraphService:
             result = self.graph.invoke(initial_state, config={"callbacks": [langfuse_handler]})
             logger.debug(f"Estado final: {result}")
 
-            # Verificar si hubo errores durante la ejecución
             if result.get("error"):
                 logger.warning(f"Error en ejecución: {result['error']}")
                 return {
                     "response": "Lo siento, hubo un error al procesar tu consulta.",
                     "intent": result.get("intent"),
+                    "thread_id": thread_id,
                     "success": False,
                     "error": result["error"],
                     "metadata": result.get("metadata", {}),
                 }
 
-            # Respuesta exitosa
             logger.info(f"Completado — Intención: {result.get('intent')}")
 
             return {
                 "response": result.get("final_response") or "No se generó respuesta",
                 "intent": result.get("intent"),
+                "thread_id": thread_id,
                 "success": True,
                 "error": None,
                 "metadata": result.get("metadata", {}),
             }
 
         except Exception as e:
-            # Capturar errores no manejados
             error_msg = f"Error inesperado en el grafo: {str(e)}"
             logger.error(error_msg)
 
             return {
                 "response": "Lo siento, ocurrió un error inesperado al procesar tu consulta.",
                 "intent": None,
+                "thread_id": thread_id,
                 "success": False,
                 "error": error_msg,
                 "metadata": metadata or {},
@@ -117,5 +123,4 @@ class GraphService:
             return f"Error generando visualización: {str(e)}"
 
 
-# Instancia global del servicio (patrón singleton)
 graph_service = GraphService()
