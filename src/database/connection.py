@@ -19,7 +19,7 @@ def get_session() -> Session:
     return Session(engine)
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_db() -> Generator[Session]:
     """FastAPI dependency: yields a session and closes it after the request."""
     with Session(engine) as session:
         yield session
