@@ -159,7 +159,6 @@ def list_books(status: str = None, author: str = None, title: str = None) -> str
     try:
         books = book_service.list_books(status=status, author=author)
 
-        # Filtrar por título si se especifica
         if title and books:
             title_lower = title.lower()
             books = [book for book in books if book.title and title_lower in book.title.lower()]
