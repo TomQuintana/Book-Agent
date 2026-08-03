@@ -21,37 +21,6 @@ async def root():
     return {"message": "Welcome to ASTA API - Book Management System with Multi-Agent LangGraph"}
 
 
-@router.get("/ask")
-async def ask_agent(question: str):
-    """GET endpoint that processes a question using the multi-agent graph system.
-
-    The graph automatically:
-    1. Classifies the intent (search/modify/recommend/conversation)
-    2. Routes to the specialized agent
-    3. Generates a formatted response
-
-    Args:
-        question: The question to ask the AI agent
-
-    Returns:
-        A JSON response with the agent's answer and detected intent
-
-    Example:
-        GET /ask?question=Lista todos los libros
-    """
-    result = graph_service.process_query(question)
-
-    if not result["success"]:
-        raise HTTPException(status_code=500, detail=result["error"])
-
-    return {
-        "question": question,
-        "answer": result["response"],
-        "intent": result["intent"],
-        "metadata": result["metadata"],
-    }
-
-
 def create_thread_id() -> str:
     """Generate a unique thread ID for a new conversation."""
     return str(uuid.uuid4())
