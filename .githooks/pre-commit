@@ -1,2 +1,8 @@
 #!/bin/sh
-uv run ruff check .
+set -e
+files=$(git diff --cached --name-only --diff-filter=ACM -- '*.py')
+[ -z "$files" ] && exit 0
+# ponytail: valida la versión del working-tree de los archivos staged, no el blob
+# exacto del índice; si molesta con commits parciales, migrar a `git stash --keep-index`.
+uv run ruff check $files
+uv run ruff format --check $files
