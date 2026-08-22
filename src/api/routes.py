@@ -5,14 +5,15 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
+from ..config.logging_config import get_logger
 from ..database.connection import get_db
 from ..dto.request import QueryRequest
 from ..dto.response import QueryResponse
 from ..graph import graph_service
-from ..helpers.create_title import generate_title
 from ..services.conversation_service import ConversationService
 
 router = APIRouter()
+logger = get_logger("asta.api")
 
 
 @router.get("/")
@@ -48,26 +49,54 @@ async def process_query(request: QueryRequest, session: Session = Depends(get_db
     """
     thread_id = request.thread_id or create_thread_id()
     result = graph_service.process_query(request.message, thread_id=thread_id)
-
-    if not result["success"]:
-        raise HTTPException(status_code=500, detail=result["error"])
-
     conversation_service = ConversationService(session)
 
-    conversation = conversation_service.get(thread_id) or conversation_service.create(thread_id)
+    if not result["success"]:
+        logger.error(f"Turno fallido en '{thread_id}': {result['error']}")
 
-    conversation_service.add_message(thread_id, "user", request.message)
-    conversation_service.add_message(thread_id, "assistant", result["response"])
+        return QueryResponse(
+            response=result["response"],
+            intent=result["intent"] or "unknown",
+            thread_id=thread_id,
+            success=False,
+        )
 
-    if conversation.title is None:
-        conversation_service.set_title(thread_id, generate_title(request.message))
+    conversation_service.persist_turn(thread_id, request.message, result["response"])
 
     return QueryResponse(
         response=result["response"],
         intent=result["intent"] or "unknown",
         thread_id=result["thread_id"],
-        success=result["success"],
+        success=True,
     )
+
+
+@router.post("/query/{thread_id}/retry")
+async def retry_query(thread_id: str, session: Session = Depends(get_db)) -> QueryResponse:
+    """Retries the conversation's last turn without resending the message.
+
+    The original message comes from the LangGraph checkpoint, not the body.
+    """
+    result = graph_service.resume(thread_id)
+
+    if not result["success"]:
+        raise HTTPException(status_code=409, detail="No hay nada pendiente para reintentar")
+
+    conversation_service = ConversationService(session)
+    conversation_service.persist_turn(thread_id, result["user_message"], result["response"])
+
+    return QueryResponse(
+        response=result["response"],
+        intent=result["intent"] or "unknown",
+        thread_id=thread_id,
+        success=True,
+    )
+
+
+@router.get("/query/{thread_id}/state")
+async def query_state(thread_id: str):
+    """Debug: LangGraph checkpoint flow for a thread (which node is pending and why)."""
+    return graph_service.inspect(thread_id)
 
 
 @router.post("/conversations")

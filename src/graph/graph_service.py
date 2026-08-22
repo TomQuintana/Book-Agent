@@ -1,6 +1,9 @@
 """Service for running the LangGraph multi-agent graph."""
 
+from langchain_core.runnables import RunnableConfig
 from langfuse.langchain import CallbackHandler
+
+from src.helpers.graph_helper import snapshot
 
 from ..config.logging_config import get_logger
 from .agent_graph import app as agent_graph
@@ -24,6 +27,38 @@ class GraphService:
     def __init__(self):
         """Initializes the service with the compiled graph."""
         self.graph = agent_graph
+
+    def _config(self, thread_id: str) -> RunnableConfig:
+        """Builds the config dict for the graph's invoke() method."""
+        return {
+            "configurable": {"thread_id": thread_id},
+            "callbacks": [langfuse_handler],
+        }
+
+    def _format(self, result: dict, thread_id: str) -> dict:
+        """Builds the response dict from the graph's final state."""
+        if result.get("error"):
+            logger.warning(f"Error en ejecución: {result['error']}")
+
+            return {
+                "response": "Lo siento, hubo un error al procesar tu consulta.",
+                "intent": result.get("intent"),
+                "thread_id": thread_id,
+                "success": False,
+                "error": result["error"],
+                "metadata": result.get("metadata", {}),
+            }
+
+        logger.info(f"Completado — Intención: {result.get('intent')}")
+
+        return {
+            "response": result.get("final_response") or "No se generó respuesta",
+            "intent": result.get("intent"),
+            "thread_id": thread_id,
+            "success": True,
+            "error": None,
+            "metadata": result.get("metadata", {}),
+        }
 
     def process_query(
         self, user_message: str, thread_id: str | None = None, metadata: dict | None = None
@@ -71,32 +106,13 @@ class GraphService:
                 "metadata": metadata or {},
             }
 
-            # Ejecutar el grafo completo
             logger.info(f"Procesando: '{user_message}'")
-            result = self.graph.invoke(initial_state, config={"callbacks": [langfuse_handler]})
+
+            result = self.graph.invoke(initial_state, self._config(thread_id))
+
             logger.debug(f"Estado final: {result}")
 
-            if result.get("error"):
-                logger.warning(f"Error en ejecución: {result['error']}")
-                return {
-                    "response": "Lo siento, hubo un error al procesar tu consulta.",
-                    "intent": result.get("intent"),
-                    "thread_id": thread_id,
-                    "success": False,
-                    "error": result["error"],
-                    "metadata": result.get("metadata", {}),
-                }
-
-            logger.info(f"Completado — Intención: {result.get('intent')}")
-
-            return {
-                "response": result.get("final_response") or "No se generó respuesta",
-                "intent": result.get("intent"),
-                "thread_id": thread_id,
-                "success": True,
-                "error": None,
-                "metadata": result.get("metadata", {}),
-            }
+            return self._format(result, thread_id)
 
         except Exception as e:
             error_msg = f"Error inesperado en el grafo: {str(e)}"
@@ -110,6 +126,66 @@ class GraphService:
                 "error": error_msg,
                 "metadata": metadata or {},
             }
+
+    def resume(self, thread_id: str) -> dict:
+        """Retries the half-finished turn without the user rewriting anything.
+
+        The node that failed never consolidated its checkpoint: it stayed in state.next.
+        invoke(None, config) re-runs it from the last consolidated checkpoint (the
+        router's), so the intent is not recomputed.
+        """
+        config = self._config(thread_id)
+        state = self.graph.get_state(config)
+
+        if not state.next:
+            return {
+                "response": "No hay nada pendiente para reintentar.",
+                "intent": None,
+                "thread_id": thread_id,
+                "success": False,
+                "error": "No hay ninguna ejecución pendiente",
+                "metadata": {},
+            }
+
+        logger.info(f"Reanudando '{thread_id}' desde {state.next}")
+
+        try:
+            result = self.graph.invoke(None, config)
+
+        except Exception as e:
+            error_msg = f"El reintento volvió a fallar: {str(e)}"
+
+            logger.error(error_msg)
+
+            return {
+                "response": "Lo siento, el reintento volvió a fallar.",
+                "intent": state.values.get("intent"),
+                "thread_id": thread_id,
+                "success": False,
+                "error": error_msg,
+                "metadata": {},
+            }
+
+        return self._format(result, thread_id) | {
+            "user_message": state.values.get("user_message"),
+        }
+
+    def inspect(self, thread_id: str) -> dict:
+        """Human-readable view of a thread's checkpoints, for debugging retries.
+
+        The `checkpoints` table stores msgpack blobs, so raw SQL is unreadable — and
+        `next` isn't a column at all, LangGraph derives it from the pending writes.
+        """
+        config = self._config(thread_id)
+        state = self.graph.get_state(config)
+
+        return {
+            "thread_id": thread_id,
+            "current": snapshot(state),
+            "can_retry": bool(state.next),
+            # más viejo primero, así se lee como el flujo del turno
+            "history": [snapshot(s) for s in reversed(list(self.graph.get_state_history(config)))],
+        }
 
     def get_graph_visualization(self) -> str:
         """Returns a Mermaid diagram of the graph for debugging and documentation.

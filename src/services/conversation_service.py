@@ -1,10 +1,12 @@
 """Conversation service: metadata + message history backed by the database."""
 
-from __future__ import annotations  # anotaciones lazy: el método `list` no rompe `list[Message]`
+from __future__ import annotations
 
 from datetime import datetime
 
 from sqlmodel import Session, select
+
+from src.helpers.create_title import generate_title
 
 from ..database.models import Conversation, Message
 
@@ -40,11 +42,14 @@ class ConversationService:
         msg = Message(thread_id=thread_id, role=role, content=content)
         self.session.add(msg)
         conv = self.session.get(Conversation, thread_id)
+
         if conv:
             conv.updated_at = datetime.now()
             self.session.add(conv)
+
         self.session.commit()
         self.session.refresh(msg)
+
         return msg
 
     def get_messages(self, thread_id: str) -> list[Message]:
@@ -62,3 +67,25 @@ class ConversationService:
         self.session.commit()
         self.session.refresh(conv)
         return conv
+
+    def persist_turn(self, thread_id: str, user_message: str, response: str) -> None:
+        """Saves the user/assistant pair of a successful turn, titling the conversation if new."""
+        conversation = self.get(thread_id) or self.create(thread_id)
+
+        if conversation is None:
+            conversation = Conversation(thread_id=thread_id)
+            self.session.add(conversation)
+
+        self.session.add_all(
+            [
+                Message(thread_id=thread_id, role="user", content=user_message),
+                Message(thread_id=thread_id, role="assistant", content=response),
+            ]
+        )
+
+        conversation.updated_at = datetime.now()
+
+        if conversation.title is None:
+            conversation.title = generate_title(user_message)
+
+        self.session.commit()
