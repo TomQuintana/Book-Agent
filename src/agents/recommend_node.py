@@ -68,7 +68,12 @@ def agent_recommend(state: AgentState) -> AgentState:
 
         result = recommend_agent.invoke(
             {"messages": [{"role": "user", "content": user_message}]},
-            {"configurable": {"thread_id": state.get("thread_id") or "book_agent_session"}},
+            {
+                "configurable": {
+                    "thread_id": state.get("thread_id") or "book_agent_session",
+                    "checkpoint_ns": "agents",
+                }
+            },
         )
 
         messages = result["messages"]
@@ -99,9 +104,7 @@ def agent_recommend(state: AgentState) -> AgentState:
         logger.debug(f"Completado: {agent_response[:150]}...")
 
     except Exception as e:
-        error_msg = f"Error en nodo de recomendación: {str(e)}"
-        logger.error(error_msg)
-        state["intermediate_result"] = "No se pudieron generar recomendaciones."
-        state["error"] = error_msg
+        logger.error(f"Error en nodo de recomendación: {str(e)}")
+        raise
 
     return state

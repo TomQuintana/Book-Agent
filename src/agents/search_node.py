@@ -12,7 +12,6 @@ from ..tools.book_tools import get_book, list_books
 logger = get_logger("asta.search")
 
 
-# Prompt canónico: fallback si Langfuse no responde y fuente para el seed (scripts/seed_prompts.py)
 SEARCH_SYSTEM_PROMPT = """Eres un agente especializado en búsqueda y consulta de libros.
 
 Tu especialidad es BUSCAR información sobre libros, no modificarlos.
@@ -50,12 +49,9 @@ Ejemplos:
 
 Sé conciso y útil en tus respuestas."""
 
-
-# Crear agente interno especializado SOLO en búsqueda
-# Este agente solo tiene acceso a tools de lectura (NO puede modificar datos)
 search_agent = create_agent(
     model=llm,
-    tools=[list_books, get_book],  # Solo tools de búsqueda/consulta
+    tools=[list_books, get_book],
     state_schema=InternalAgentState,
     checkpointer=checkpointer,
     system_prompt=langfuse.get_prompt("search-agent", fallback=SEARCH_SYSTEM_PROMPT).prompt,
@@ -89,21 +85,22 @@ def agent_search(state: AgentState) -> AgentState:
     try:
         logger.debug(f"Procesando búsqueda: '{user_message}'")
 
-        # El agente interno decide automáticamente qué tool usar
         result = search_agent.invoke(
             {"messages": [{"role": "user", "content": user_message}]},
-            {"configurable": {"thread_id": state.get("thread_id") or "book_agent_session"}},
+            {
+                "configurable": {
+                    "thread_id": state.get("thread_id") or "book_agent_session",
+                    "checkpoint_ns": "agents",
+                }
+            },
         )
 
-        # Extraer todos los mensajes para debugging
         messages = result["messages"]
 
-        # Extraer información de tool calls para debugging
         tools_used = []
         tool_results = []
 
         for msg in messages:
-            # Detectar si es un mensaje con tool calls
             if hasattr(msg, "tool_calls") and msg.tool_calls:
                 for tool_call in msg.tool_calls:
                     tool_info = {
@@ -113,7 +110,6 @@ def agent_search(state: AgentState) -> AgentState:
                     tools_used.append(tool_info)
                     logger.debug(f"Tool llamada: {tool_info['name']}({tool_info['args']})")
 
-            # Detectar si es un resultado de tool
             if hasattr(msg, "type") and msg.type == "tool":
                 tool_results.append(
                     {
@@ -123,10 +119,8 @@ def agent_search(state: AgentState) -> AgentState:
                 )
                 logger.debug(f"Tool resultado: {msg.content[:100]}...")
 
-        # Extraer la respuesta final del agente (último mensaje)
         agent_response = messages[-1].content
 
-        # Construir resultado con información de debugging
         debug_info = ""
         if tools_used:
             debug_info = "\n\n[DEBUG INFO]\n"
@@ -136,11 +130,9 @@ def agent_search(state: AgentState) -> AgentState:
         else:
             debug_info = "\n\n[DEBUG INFO]\n⚠️  No se ejecutó ninguna tool\n"
 
-        # Actualizar el estado
         state["intermediate_result"] = agent_response + debug_info
         state["error"] = None
 
-        # Agregar metadata para tracking
         if "metadata" not in state or state["metadata"] is None:
             state["metadata"] = {}
 
@@ -154,10 +146,7 @@ def agent_search(state: AgentState) -> AgentState:
         logger.debug(f"Resultado: {agent_response[:150]}...")
 
     except Exception as e:
-        error_msg = f"Error en nodo de búsqueda: {str(e)}"
-        logger.error(error_msg)
-
-        state["intermediate_result"] = "No se pudieron obtener resultados de la búsqueda."
-        state["error"] = error_msg
+        logger.error(f"Error en nodo de búsqueda: {str(e)}")
+        raise
 
     return state

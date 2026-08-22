@@ -12,7 +12,6 @@ from ..tools.book_tools import create_book, delete_book, update_book
 logger = get_logger("asta.modify")
 
 
-# Prompt canónico: fallback si Langfuse no responde y fuente para el seed (scripts/seed_prompts.py)
 MODIFY_SYSTEM_PROMPT = """Eres un agente especializado en modificar la base de datos de libros.
 
 Tu especialidad es CREAR, ACTUALIZAR y ELIMINAR libros.
@@ -51,10 +50,17 @@ def agent_modify(state: AgentState) -> AgentState:
     """Node that processes modification operations (create, update, delete)."""
     user_message = state["user_message"]
 
+    # raise ConnectionError("boom: proveedor caido (TEMPORAL, sacar)")
+
     try:
         result = modify_agent.invoke(
             {"messages": [{"role": "user", "content": user_message}]},
-            {"configurable": {"thread_id": state.get("thread_id") or "book_agent_session"}},
+            {
+                "configurable": {
+                    "thread_id": state.get("thread_id") or "book_agent_session",
+                    "checkpoint_ns": "agents",
+                }
+            },
         )
 
         messages = result["messages"]
@@ -74,9 +80,7 @@ def agent_modify(state: AgentState) -> AgentState:
         logger.debug(f"Completado: {agent_response[:150]}...")
 
     except Exception as e:
-        error_msg = f"Error en nodo de modificación: {str(e)}"
-        logger.error(error_msg)
-        state["intermediate_result"] = "No se pudo completar la operación."
-        state["error"] = error_msg
+        logger.error(f"Error en nodo de modificación: {str(e)}")
+        raise
 
     return state
