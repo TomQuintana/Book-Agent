@@ -18,6 +18,12 @@ class BookService:
             session.refresh(book)
             return book
 
+    def get_by_title_author(self, title: str, author: str | None) -> Book | None:
+        """Find a book by title+author. Acts as the idempotency guard on retries."""
+        with get_session() as session:
+            query = select(Book).where(Book.title == title, Book.author == author)
+            return session.exec(query).first()
+
     def get_book(self, book_id: int) -> Book | None:
         """Fetch a book by id, or None if it doesn't exist."""
         with get_session() as session:

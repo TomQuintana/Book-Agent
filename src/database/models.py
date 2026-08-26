@@ -5,6 +5,14 @@ from datetime import date, datetime
 from sqlmodel import Field, SQLModel
 
 
+class StatusEnum(str):
+    """Enum for book status."""
+
+    READ = "read"
+    READING = "reading"
+    NOT_READ = "not_read"
+
+
 class Book(SQLModel, table=True):  # type: ignore[call-arg]
     """Book table model."""
 
@@ -14,11 +22,10 @@ class Book(SQLModel, table=True):  # type: ignore[call-arg]
     title: str = Field(..., min_length=1)
     author: str | None = None
     status: str | None = None
-    type: str | None = None
+    type: str | None = None  # hay que pasarlo a enum y generar una coleccion de tipos de libros
     description: str | None = None
     created_at: datetime | None = Field(default_factory=datetime.now)
     is_physically: bool | None = Field(default=False)
-    finished: date | None = None
 
 
 class BookCreate(SQLModel):
@@ -26,8 +33,8 @@ class BookCreate(SQLModel):
 
     title: str = Field(..., min_length=1)
     author: str | None = None
-    status: str | None = None
-    type: str | None = None
+    status: str | None = None  # hay que pasarlo a enum
+    type: str | None = None  # hay que pasarlo a enum y generar una coleccion de tipos de libros
     description: str | None = None
     is_physically: bool | None = Field(default=False)
     finished: date | None = None

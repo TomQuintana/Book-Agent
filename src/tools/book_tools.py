@@ -36,6 +36,11 @@ def create_book(
         Confirmation message with the created book details
     """
     try:
+        # Guard de idempotencia: un retry reejecuta el nodo entero, incluida esta tool.
+        existing = book_service.get_by_title_author(title, author)
+        if existing:
+            return f"El libro '{title}' ya existe (ID {existing.id})"
+
         book_data = BookCreate(
             title=title,
             author=author,
